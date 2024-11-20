@@ -2,7 +2,14 @@
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
+## GIT 操作設置
 
+**忽略上存的文件夾 :** 
+
+Build/
+Output/
+Out/
+.vs/
 
 ## 开发总结 
 
@@ -50,6 +57,8 @@
 	}
  ```
 ## Struct StreamInfo 
+
+StreamInfo 是傳入鏡頭對象的參數對象結果
 
 	（\MediaGuard\StreamDefine.h）
 	1. hard code 實例要修改對應參數
@@ -102,4 +111,4 @@
 > 
 
 ***
- 
+

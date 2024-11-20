@@ -1,7 +1,9 @@
 # 排除上存到GIT的文件件與文件
 Other_ExcludeToGit/
 Build/
-
+Output/
+Out/
+.vs/
 # Windows
 [Dd]esktop.ini
 Thumbs.db
