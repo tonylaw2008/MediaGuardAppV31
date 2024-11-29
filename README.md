@@ -2,6 +2,8 @@
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
+**NVR 錄像設備和一卡通 混合功能版本,API 請查閱 ./DVR開發相關的說明VER3.1_2024-11-17.doc**
+
 ## GIT 操作設置
 
 **忽略上存的文件夾 :** 
