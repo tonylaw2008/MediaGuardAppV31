@@ -58,6 +58,10 @@ IF(WIN32)
     set(OPENSSL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/windows/x64/openssl1.1.1b/include)
     set(OPENSSL_LIBRARIES ${CMAKE_SOURCE_DIR}/3rdparty/windows/x64/openssl1.1.1b/lib)
 
+     # rapidjson
+    set(RAPIDJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/windows/x64/rapidjson/include)
+    
+
 elseif(APPLE)
     set(FFMPEG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/unix/x64/ffmpeg/include) 
 	set(FFMPEG_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/unix/x64/ffmpeg/lib)  
@@ -75,6 +79,9 @@ elseif(UNIX)
     # 需要openssl編譯版本
     set(OPENSSL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/linux/x64/openssl.1.1.1qqqqqq/include)
     set(OPENSSL_LIBRARIES ${CMAKE_SOURCE_DIR}/3rdparty/linux/x64/openssl.1.1.1qqqqqq/lib)
+
+    # rapidjson_include X:\MediaGuardAppV31\MediaGuardApp_Dev\3rdparty\linux\x64\rapidjson
+    set(RAPIDJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/linux/x64)
 
 endif()
 
@@ -181,8 +188,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE  ${OpenCV_INCLUDE_DIRS})
 # 設置包含 openssl 目錄 
 target_include_directories(${PROJECT_NAME} PRIVATE  ${OPENSSL_INCLUDE_DIR})
 
+# 设置包含 rapidjson目录 X:\MediaGuardAppV31\MediaGuardApp_Dev\3rdparty\linux\x64\
+target_include_directories(${PROJECT_NAME} PRIVATE ${RAPIDJSON_INCLUDE_DIR})
+
 # 设置包含目录，确保项目中可以找到头文件
 target_include_directories(${PROJECT_NAME} PRIVATE ${LOCAL_INCLUDE_DIR})
+
+
+
 
 # 連結 FFmpeg 庫 和 OpenCV 庫  openssl-1.1.1q(OPENSSL_LIBRARIES) 
 target_link_libraries(${PROJECT_NAME} PRIVATE

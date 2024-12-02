@@ -9,7 +9,7 @@
 #include "../easylogging/EasyLogHelper.h"
 #include "../Common/JsonHelper.h"
 #include "../Common/Macro.h" 
-#include "../ErrorInfo/ErrorCode.h"  
+#include "../ErrorInfo/ErrorCode.h"
 #include "../Http/LibcurlHelper.h"
 
 //修改為使用 std 17  --2024-3-13 
@@ -263,7 +263,8 @@ void DeviceConfig::getcpuid(unsigned int* CPUInfo, unsigned int InfoType)
 
 void DeviceConfig::get_cpuidex(unsigned int* CPUInfo, unsigned int InfoType, unsigned int ECXValue)
 {
-#if defined(_MSC_VER) // MSVC  
+#if defined(_MSC_VER) // MSVC
+	
 #if defined(_WIN64) // 64位下不支持内联汇编. 1600: VS2010, 据说VC2008 SP1之后才支持__cpuidex.  
 	__cpuidex((int*)(void*)CPUInfo, (int)InfoType, (int)ECXValue);
 #else  
