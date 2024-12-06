@@ -25,8 +25,7 @@ int main(int argc, char** argv)
 	LOG(INFO) << "Hello World...................";
 	 
 	LOG(INFO) << "Console Platform Is Required UTF8 Encoding.";
-	
-
+	 
 	//test============================================
 	/*char c;
 	std::cin.get(c);

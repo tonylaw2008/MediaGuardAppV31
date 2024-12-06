@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "X:/MediaGuardAppV31/MediaGuardApp_Dev/out/build/x64-Debug/MediaGuard/CMakeFiles/MediaGuard.dir/embed.manifest"

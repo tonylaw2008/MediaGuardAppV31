@@ -7,17 +7,13 @@
 ## GIT 操作設置
 
 **忽略上存的文件夾 :** 
-
-Build/
-Output/
-Out/
 .vs/
 
 ## 开发总结 
 
 **2024-11-20** 
 
-旧版 windows 运作正常, 现在目标是 Version 3.1 版本 修改未 linux 稳定版本.
+旧版 windows 运作正常, 现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
 
 现在缺余下工作:
 
@@ -29,6 +25,10 @@ Out/
 	ffmpeg编译的时候,需要选择CUDA,如果激器没有就不选.
 
 ​         HardAndSoftDecode_Ref.md 参考软解和硬解码.
+
+4.EasyLogging++ 這個組件去掉,使用spdlog日志
+
+​	參考 MediaGuard_DOC/spdlog日志.md
 
 ***
 ## 代码结构 
@@ -104,13 +104,13 @@ StreamInfo 是傳入鏡頭對象的參數對象結果
 ## 操作方法备注
 
 ***
+### 主控台操作
+
  1. 增加Ctrl+c Ctrl+Break Enter 行为屏蔽（signal 监视）     
  1. 只能输入exit退出
 
+### WEB 頁面
 
+ 	/web/index.html
 
-***
-> 
-
-***
-
+​	/web/playtext.html 跨域與登錄測試

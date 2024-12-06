@@ -1,8 +1,6 @@
 ﻿#pragma once
-#include "../Common/JsonHelper.h" 
-//#include "Common.h" 
- 
-#include "ConfigFile.h"
+#include "../Common.h" 
+  
 #include <map>
 #include <mutex>
 #include <fstream>

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Common.h"
+#include "./Common.h"
 #include "StreamDefine.h" 
 #include "StreamHandle.h" 
 #include "Time.h"  

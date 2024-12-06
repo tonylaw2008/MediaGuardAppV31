@@ -597,8 +597,7 @@ void ManagerController::valid_op(int n)
 		main_exit = false;
 	}
 }
-
-
+ 
 /*
 * 判斷 ctrl+c ctrl+break 等等終斷操作的 拒絕操作提示返回.
 */
