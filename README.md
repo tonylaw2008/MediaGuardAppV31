@@ -2,7 +2,9 @@
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
-**NVR 錄像設備和一卡通 混合功能版本,API 請查閱 ./DVR開發相關的說明VER3.1_2024-11-17.doc**
+**[NVR 錄像設備] 和 [一卡通 ACS] 混合功能版本**
+
+**API 請查閱 ./MediaGuard_DOC/DVR開發相關的說明VER3.1_2024-12.doc**
 
 ## GIT 操作設置
 
@@ -45,10 +47,10 @@
 	switch (nStreamType)  
 	{  
 	case kStreamTypeUsb:  
-		m_pHandle = std::make_shared<UsbStreamHandle>();  
+		m_pHandle = std::make_shared<UsbStreamHandle>();   //沒用到 Ignore
 		break;  
 	case kStreamTypeAudio:  
-		m_pHandle = std::make_shared<AudioStreamHandle>();  
+		m_pHandle = std::make_shared<AudioStreamHandle>();  //沒用到 Ignore
 		break;  
 	case kStreamTypeRtsp:  
 		m_pHandle = std::make_shared<RtspStreamHandle>();  
@@ -60,13 +62,13 @@
  ```
 ## Struct StreamInfo 
 
-StreamInfo 是傳入鏡頭對象的參數對象結果
+StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(結構體)。
 
 	（\MediaGuard\StreamDefine.h）
-	1. hard code 實例要修改對應參數
+	1. 硬件解碼 (NVIDIA CUDA / INTEL ITEGRATE DISPLAY) 實例要修改對應參數 StreamInfo.nHDType 
 	2. 如果要從雲端獲取則要從幾個API綜合獲取對應參數。
 	3. API: CameraMpeg::camera_list；CameraMpeg::device_by_serial_no;CameraMpeg::setting_n_schedule_by_camera_id
-	4. 還有一個是邏輯轉換的api camera_list_trans_to_strean_info， 主要是把雲端邏輯轉換為具體情況的：
+	4. 還有一個是邏輯轉換的api camera_list_trans_to_strean_info， 主要是把雲端邏輯轉換為具體情況的,例如：nHDType合成本地的Device.json, Camera Info 來自API
 	5. 例如：bRtmp = ttrue是開啟RTMP的，但新規則改為 StreamDecodeType (StreamInfo.nStreamDecodeType)的類型，HLS/RTMP/進行切換。
 	6. 目前網上雲端沒有bRtmp對應的參數，對應的 CamSettingNSchedule。RtmpOutput和雲端對應的沒有UI改動的，只有默認FALSE.所有對RTMP比較混亂的，所以默認就是FALSE
 
@@ -86,6 +88,7 @@ StreamInfo 是傳入鏡頭對象的參數對象結果
 1. 车牌识别/警报  
 1. 老鼠识别/警报  
 1. 行为识别/警报 
+1. 入侵區域告警
 ***
 ## 功能  
 
@@ -111,6 +114,7 @@ StreamInfo 是傳入鏡頭對象的參數對象結果
 
 ### WEB 頁面
 
- 	/web/index.html
+ 	/web/index.html 
+ 	/web/playtext.html 跨域與登錄測試
 
-​	/web/playtext.html 跨域與登錄測試
+​	
