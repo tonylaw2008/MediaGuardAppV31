@@ -43,7 +43,10 @@ private:
 	*/
 	bool open_input_stream();
 
-	bool open_codec_context(int& nStreamIndex, AVCodecContext** dec_ctx, AVFormatContext* fmt_ctx, enum AVMediaType type);
+	/*
+	* 打開解碼器
+	 */
+	bool open_codec_context(int& nStreamIndex, AVCodecContext** pDecoderCtx, AVFormatContext* pFmtCtx, enum AVMediaType avMediaType);
 
 	/*关闭STREAM*/
 	void close_input_stream();

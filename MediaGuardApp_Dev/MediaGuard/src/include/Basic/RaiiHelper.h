@@ -1,3 +1,5 @@
+//用於 curl 的回調函數
+//LibcurlHelper.cpp
 #pragma once
 #include <functional>
 #include "Basic.h"

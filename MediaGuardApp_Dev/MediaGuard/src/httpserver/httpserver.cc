@@ -117,8 +117,15 @@ bool UserPasswordValidByToken(const httplib::Request& req, httplib::Response& re
 		return true;
 	}
 #elif __linux__
-	// 请自行补充
-	return false;
+	// 请自行补充 
+	//return true; 
+	if (token != local_authorization) {
+		res.status = 401;
+		return false;
+	}
+	else {
+		return true;
+	}
 #endif
 }
 

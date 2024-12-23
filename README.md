@@ -33,7 +33,7 @@
 ***
 ## 代码结构 
 
-**LowLevelAnalysic_MediaGuard.pdf  核心文件三个**     
+**參考LowLevelAnalysic_MediaGuard.pdf  核心文件三个**     
 
 1. RtspStreamHandle.cpp 解码单元 對當前鏡頭單元解碼 MP4 FLV HLS JPEG RTMP等等  
 对解码单元进行管理   

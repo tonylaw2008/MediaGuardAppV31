@@ -16,7 +16,7 @@
 #define MAKE64(_high32,_low32)  (((UINT64)_high32)<<32) | ((UINT64)_low32)
 #endif
 
-int64_t getFileSize(const char* fileName);
+//int64_t getFileSize(const char* fileName);
 size_t getFileCtx(const char* fileName, char* ctx, size_t ctxsize);
 int GetExecPath(char* p, int size);
 

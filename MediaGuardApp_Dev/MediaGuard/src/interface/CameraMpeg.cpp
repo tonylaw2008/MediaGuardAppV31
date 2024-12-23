@@ -5,15 +5,13 @@
 #include <string>
 #include <iosfwd>
 #include <thread>
-#include "Basic/ThreadPool.h" 
+#include "../ThreadPool.h" 
 #include "Basic/ThreadObject.h" 
 
 #include "Common/JsonHelper.h"
 #include "Common/Macro.h" 
 #include "ErrorInfo/ErrorCode.h" 
-
-#include "easylogging/EasyLogHelper.h"
-
+ 
 #include "Http/LibcurlHelper.h"
 #include "../StreamHandle.h" 
 #include "Config/DeviceConfig.h" 
@@ -22,12 +20,7 @@
 #include "../StreamDefine.h"
 #include "../interface/CameraMpeg.h"
 #include "../interface/ResponseDefine.h"
-//#ifdef _WIN32
-//#include <optional>
-//#elif __linux__
-//// 请自己补linux内容
-//#endif
-
+ 
 #include "ErrorInfo/ErrorMessage.h"
 
 #include "Config/DeviceConfig.h"
@@ -89,9 +82,7 @@ bool CameraMpeg::request_token(std::string& token)
 	{
 		int64_t now = Time::GetMilliTimestamp();
 		if (Service::TokenRet.TokenExpiredTimeOut > now && Service::TokenRet.AccessToken != "")
-		{
-			//TEST
-			//LOG(INFO) << "Get Token from Service::TokenReturn TokenRet.AccessToken " << Service::TokenRet.TokenExpiredTimeOut << std::endl;
+		{ 
 			token = Service::TokenRet.AccessToken;
 			return true;
 		}
@@ -121,9 +112,7 @@ bool CameraMpeg::request_token(std::string& token)
 
 	rapidjson::Document doc;
 	JS_PARSE_OBJECT_RETURN(doc, strRst, false);
-
-	//TEST
-	//LOG(INFO) << "func::request_token get token result \n" << strRst;
+ 
 
 	if (doc.HasMember("meta") && doc["meta"].IsObject())
 	{
@@ -163,13 +152,15 @@ bool CameraMpeg::request_token(std::string& token)
 		else
 		{
 			//TGET TOKEN FAIL
-			LOG(INFO) << "[META::SUCCESS=FALSE] func::request_token get token result \n" << strRst;
+			//LOG(INFO) << "[META::SUCCESS=FALSE] func::request_token get token result \n" << strRst;
+			std::cout <<   "[META::SUCCESS=FALSE] func::request_token get token result \n"  << std::endl;
 		}
 	}
 	else
 	{
 		//TGET TOKEN FAIL
-		LOG(INFO) << "[FAIL] func::request_token get token result \n" << strRst;
+		//LOG(INFO) << "[FAIL] func::request_token get token result \n" << strRst;
+		std::cout << "[FAIL] func::request_token get token result \n" << std::endl;
 	}
 	return ret;
 }
@@ -194,7 +185,8 @@ void CameraMpeg::camera_mpeg_add(Service::CameraMpegInfo& cameraMpegInfo)
 
 	if (nCode != CP_OK)
 	{
-		LOG(INFO) << "camera_mpeg_add post resturn error code " << strResponse;
+		//LOG(INFO) << "camera_mpeg_add post resturn error code " << strResponse;
+		std::cout << "camera_mpeg_add post resturn error code " << strResponse << std::endl;
 	}
 }
 
@@ -221,7 +213,8 @@ bool CameraMpeg::camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::
 	bool succ = request_token(bear_token);
 	if (!succ)
 	{
-		LOG(TRACE) << "camera_mpeg_add2::get_api_token " << succ << " FAIL";
+		//LOG(TRACE) << "camera_mpeg_add2::get_api_token " << succ << " FAIL";
+		std::cout << "camera_mpeg_add2::get_api_token " << succ << " FAIL" << std::endl;
 		return false;
 	}
 	para.Authorization = bear_token;
@@ -229,14 +222,16 @@ bool CameraMpeg::camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::
 	bool mpeg_to_json_succ = camera_mpeg_to_json(cameraMpegInfo, strMsg);
 	if (!mpeg_to_json_succ)
 	{
-		LOG(TRACE) << "camera_mpeg_add2::camera_mpeg_to_json " << mpeg_to_json_succ << " FAIL";
+		//LOG(TRACE) << "camera_mpeg_add2::camera_mpeg_to_json " << mpeg_to_json_succ << " FAIL";
+		std::cout << "camera_mpeg_add2::camera_mpeg_to_json " << mpeg_to_json_succ << " FAIL" << std::endl;
 		return false;
 	}
 	int nCode = clientCurl.Post(para, strMsg, strResponse);
 
 	if (nCode != CP_OK)
 	{
-		LOG(ERROR) << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse;
+		//LOG(ERROR) << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse;
+		std::cout << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse << std::endl;
 	}
 }
 
@@ -307,7 +302,8 @@ bool CameraMpeg::camera_mpeg_to_json(Service::CameraMpegInfo& cameraMpegInfo, st
 	}
 	catch (std::exception& e)
 	{
-		LOG(ERROR) << "[CameraMpeg::camera_mpeg_to_json] " << e.what() << std::endl;
+		//LOG(ERROR) << "[CameraMpeg::camera_mpeg_to_json] " << e.what() << std::endl;
+		std::cout << "[CameraMpeg::camera_mpeg_to_json] " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -364,7 +360,8 @@ bool CameraMpeg::get_camera_list(std::string& strRst)
 
 	if (!parseJsonResult)
 	{
-		LOG(INFO) << "get_camera_list parseJsonResult = " << parseJsonResult << std::endl;
+		//LOG(INFO) << "get_camera_list parseJsonResult = " << parseJsonResult << std::endl;
+		std::cout << "get_camera_list parseJsonResult = " << parseJsonResult << std::endl;
 	}
 	int nCode = clientCurl.Post(para, strMsg, strRst);
 	//TEST
@@ -416,7 +413,8 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 
 		if (!parseRes)
 		{
-			LOG(INFO) << "camera_list_input_to_json parseRes = " << parseRes << std::endl;
+			//LOG(INFO) << "camera_list_input_to_json parseRes = " << parseRes << std::endl;
+			std::cout << "camera_list_input_to_json parseRes = " << parseRes << std::endl;
 			return false;
 		}
 
@@ -426,7 +424,8 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 			para.Authorization = token1;
 		}
 		else {
-			LOG(INFO) << "func::request_token(token1) get token fail! ";
+			//LOG(INFO) << "func::request_token(token1) get token fail! ";
+			std::cout <<  "func::request_token(token1) get token fail! " << std::endl;
 			return false;
 		}
 
@@ -446,7 +445,8 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 			bool saveJsonResult = File::saveJsonFile(strRst, saveJPathFile.str());
 			if (!saveJsonResult)
 			{
-				LOG(INFO) << "File::saveJsonFile : Save ncode_camera_list.json fail: " << saveJPathFile.str();
+				//LOG(INFO) << "File::saveJsonFile : Save ncode_camera_list.json fail: " << saveJPathFile.str();
+				std::cout << "File::saveJsonFile : Save ncode_camera_list.json fail: " << saveJPathFile.str() << std::endl;
 				return CURLE_FAILED_INIT;
 			}
 		}
@@ -484,7 +484,8 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 						bool get_cam_succ = setting_n_schedule_by_camera_id(stream_camera_id, token1, cam_set);
 						if (get_cam_succ == false) {
 							try {
-								LOG(ERROR) << "GET CAMER CAMERA SCHEDULE CONFIG JSON TO OBJ FAIL (func::camera_list<setting_n_schedule_by_camera_id).camera id = " << std::to_string(streamInfo.nCameraId);
+								//LOG(ERROR) << "GET CAMER CAMERA SCHEDULE CONFIG JSON TO OBJ FAIL (func::camera_list<setting_n_schedule_by_camera_id).camera id = " << std::to_string(streamInfo.nCameraId);
+								std::cout << "GET CAMER CAMERA SCHEDULE CONFIG JSON TO OBJ FAIL (func::camera_list<setting_n_schedule_by_camera_id).camera id = " << std::to_string(streamInfo.nCameraId) << std::endl;
 							}
 							catch (...)
 							{
@@ -572,7 +573,7 @@ bool CameraMpeg::camera_list_trans_to_strean_info(Service::StreamInfoApiList& sL
 		StreamInfo streamInfo;
 		streamInfo.nCameraId = itr->nCameraId;
 		streamInfo.rtspIp = itr->rtspIp;
-		streamInfo.nHDType = itr->nHDType;
+		streamInfo.nHDType = itr->nHDType;  
 		streamInfo.strInput = itr->strInput;
 		streamInfo.bSavePic = itr->bSavePic;
 		streamInfo.mediaFormate = itr->mediaFormate;
@@ -648,7 +649,8 @@ bool CameraMpeg::device_by_serial_no(Service::DeviceDetails& deviceDetails)
 		strRst = File::readJsonFile(mainCompanyDetailsJsonFile);
 		if (strRst=="")
 		{
-			LOG(INFO) << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [READ] main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile;
+			//LOG(INFO) << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [READ] main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile;
+			std::cout << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [READ] main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile << std::endl;
 		}
 	}
 	else {
@@ -659,7 +661,8 @@ bool CameraMpeg::device_by_serial_no(Service::DeviceDetails& deviceDetails)
 
 		if (ncode != CURLE_OK)
 		{
-			LOG(INFO) << "File::device_by_serial_no : Save main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile;
+			//LOG(INFO) << "File::device_by_serial_no : Save main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile;
+			std::cout << "File::device_by_serial_no : Save main_company_details_by_serialno.json fail: " << mainCompanyDetailsJsonFile << std::endl;
 			return CURLE_FAILED_INIT;
 		}
 		else {
@@ -668,7 +671,8 @@ bool CameraMpeg::device_by_serial_no(Service::DeviceDetails& deviceDetails)
 			bool saveJsonResult = File::saveJsonFile(strRst, saveJPathFile);
 			if (!saveJsonResult)
 			{
-				LOG(INFO) << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [SAVE] main_company_details_by_serialno.json fail: " << saveJPathFile;
+				//LOG(INFO) << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [SAVE] main_company_details_by_serialno.json fail: " << saveJPathFile;
+				std::cout << "CameraMpeg::device_by_serial_no File::readJsonFile device_by_serial_no : [SAVE] main_company_details_by_serialno.json fail: " << saveJPathFile << std::endl;
 				return CURLE_FAILED_INIT;
 			}
 		}
@@ -742,7 +746,8 @@ bool CameraMpeg::setting_n_schedule_by_camera_id(std::string& camera_id, std::st
 		strRst = File::readJsonFile(ss_camera_schedule_pathfile.str());
 		if (strRst == "")
 		{
-			LOG(INFO) << "CameraMpeg::setting_n_schedule_by_camera_id  [READ JSON]  fail: " << ss_camera_schedule_pathfile.str();
+			//LOG(INFO) << "CameraMpeg::setting_n_schedule_by_camera_id  [READ JSON]  fail: " << ss_camera_schedule_pathfile.str();
+			std::cout << "CameraMpeg::setting_n_schedule_by_camera_id  [READ JSON]  fail: " << ss_camera_schedule_pathfile.str() << std::endl;
 		}
 	}
 	else {
@@ -750,7 +755,8 @@ bool CameraMpeg::setting_n_schedule_by_camera_id(std::string& camera_id, std::st
 		int ncode = clientCurl.Get(para, strRst); 
 		if (ncode != 0)
 		{
-			LOG(TRACE) << "func::cameraMpeg::setting_n_schedule_by_camera_id() fail!!! ncode =" << ncode;
+			//LOG(TRACE) << "func::cameraMpeg::setting_n_schedule_by_camera_id() fail!!! ncode =" << ncode;
+			std::cout << "func::cameraMpeg::setting_n_schedule_by_camera_id() fail!!! ncode =" << ncode << std::endl;
 			return false;
 		}
 		else {
@@ -758,7 +764,8 @@ bool CameraMpeg::setting_n_schedule_by_camera_id(std::string& camera_id, std::st
 			bool saveJsonResult = File::saveJsonFile(strRst, ss_camera_schedule_pathfile.str());
 			if (!saveJsonResult)
 			{
-				LOG(INFO) << "CameraMpeg::setting_n_schedule_by_camera_id fail: [SAVE JSON]" << ss_camera_schedule_pathfile.str();
+				//(INFO) << "CameraMpeg::setting_n_schedule_by_camera_id fail: [SAVE JSON]" << ss_camera_schedule_pathfile.str();
+				std::cout << "CameraMpeg::setting_n_schedule_by_camera_id fail: [SAVE JSON]" << ss_camera_schedule_pathfile.str() << std::endl;
 				return CURLE_FAILED_INIT;
 			}
 		}
@@ -862,24 +869,33 @@ int CameraMpeg::query_stream_info_record(Service::StreamInfoApiList& streamInfoA
 	}
 }
 
-void CameraMpeg::stream_info_start_list(Service::StreamInfoApiList& streamInfoApiList)
-{
-	std::list< Service::StreamInfoForApi>::iterator list_iter;
-	for (list_iter = streamInfoApiList.begin(); list_iter != streamInfoApiList.end(); list_iter++)
-	{
-		Service::StreamInfoForApi streamInfoForApi = (Service::StreamInfoForApi)*list_iter;
-		StreamInfo  infoStream;
-		get_stream_info(streamInfoForApi, infoStream);
-#ifdef _WIN32
-		std::thread* thStreamHandle = new std::thread(&CameraMpeg::stream_handle_start, this, infoStream);
-#elif __linux__
-		// linux编译器传引用需要使用std::ref包装才能编译
-		std::thread* thStreamHandle = new std::thread(&CameraMpeg::stream_handle_start, this, std::ref(infoStream));
-#endif
-	}
-	return;
-}
+/// <summary>
+/// 其實是沒被調用的 應該不是用於啟動流的 2024-12-22
+/// 嘗試注釋掉 看看運行結果是否受到影響
+/// </summary>
+/// <param name="streamInfoApiList"></param>
+//void CameraMpeg::stream_info_start_list(Service::StreamInfoApiList& streamInfoApiList)
+//{
+//	std::list< Service::StreamInfoForApi>::iterator list_iter;
+//	for (list_iter = streamInfoApiList.begin(); list_iter != streamInfoApiList.end(); list_iter++)
+//	{
+//		Service::StreamInfoForApi streamInfoForApi = (Service::StreamInfoForApi)*list_iter;
+//		StreamInfo  infoStream;
+//		get_stream_info(streamInfoForApi, infoStream);
+//#ifdef _WIN32
+//		std::thread* thStreamHandle = new std::thread(&CameraMpeg::stream_handle_start, this, infoStream);
+//#elif __linux__
+//		// linux编译器传引用需要使用std::ref包装才能编译
+//		std::thread* thStreamHandle = new std::thread(&CameraMpeg::stream_handle_start, this, std::ref(infoStream));
+//#endif
+//	}
+//	return;
+//}
 
+/// <summary>
+/// 其實是沒被調用的 應該不是用於啟動流的 2024-12-22
+/// 嘗試注釋掉 看看運行結果是否受到影響
+/// </summary>
 //void CameraMpeg::stream_handle_start(StreamInfo& infoStream)
 //{
 //	StreamHandle stream;
@@ -917,9 +933,7 @@ void CameraMpeg::get_stream_info(Service::StreamInfoForApi& streamInfoForApi, St
 	infoStream.nRefCount = streamInfoForApi.nRefCount;							//No.17
 }
 
-void CameraMpeg::stream_handle_start(StreamInfo& infoStream)
-{
-}
+
 
 /// <summary>
 /// 车牌识别业务 提交需要校测的图片到AI 车牌识别并返回结果，判断精确率高于预设的则POST到CarParking_CMS Web 服务器平台
@@ -939,7 +953,8 @@ bool CameraMpeg::detect_and_handle(const StreamInfo& infoStream, const PictInfo&
 	double cfgThreshold = DEVICE_CONFIG.cfgCarPlateRecogBusiness.threshold;
 
 	bool ret = false;
-	LOG(INFO) << "func::CameraMpeg::detect_and_handle begin....... path_filename=" << pict_info.path_filename << "\n";
+	//LOG(INFO) << "func::CameraMpeg::detect_and_handle begin....... path_filename=" << pict_info.path_filename << "\n";
+	std::cout << "func::CameraMpeg::detect_and_handle begin....... path_filename=" << pict_info.path_filename << "\n" << std::endl;
 
 	std::string strRst;
 	LibcurlHelper clientCurl;
@@ -947,9 +962,7 @@ bool CameraMpeg::detect_and_handle(const StreamInfo& infoStream, const PictInfo&
 	para.strUrl = DEVICE_CONFIG.cfgCarPlateRecogBusiness.http_detect_server_api;
 	para.nConnectTimeout = 300; //毫秒
 	para.nTransTimeout = 3000; //毫秒
-
-	LOG(INFO) << pict_info.path_filename;
-
+	 
 	const std::string pathFileame = pict_info.path_filename;
 
 	int nCode = clientCurl.UploadFile(para, pathFileame, strRst);
@@ -1043,7 +1056,8 @@ bool CameraMpeg::detect_and_handle(const StreamInfo& infoStream, const PictInfo&
 						//CURLE_OK = 0 则获取成功 strRst  
 						if (plateReturn_ret != CURLE_OK)
 						{
-							LOG(INFO) << "post  fail: " << http_server_api_url << " pathFileame:" << pathFileame << "API::PlateReturn::strResponse:\n" << resPlateReturn;
+							//LOG(INFO) << "post  fail: " << http_server_api_url << " pathFileame:" << pathFileame << "API::PlateReturn::strResponse:\n" << resPlateReturn;
+							std::cout << "post  fail: " << http_server_api_url << " pathFileame:" << pathFileame << "API::PlateReturn::strResponse:\n" << resPlateReturn << std::endl;
 							return CURLE_FAILED_INIT;
 						}
 
@@ -1072,12 +1086,14 @@ bool CameraMpeg::detect_and_handle(const StreamInfo& infoStream, const PictInfo&
 							std::string upfileRet;
 							int upFile_ret = clientCurl3.UploadFile(para3, pict_info.path_filename, upfileRet);
 
-							LOG(INFO) << "func::detect_and_handle::PlateReturnUpFile up file result: " << upfileRet;
+							//LOG(INFO) << "func::detect_and_handle::PlateReturnUpFile up file result: " << upfileRet;
+							std::cout << "func::detect_and_handle::PlateReturnUpFile up file result: " << upfileRet << std::endl;
 						}
 					}
 				}
 				//strRst 打印 json （回传结果）
-				LOG(INFO) << "func::detect_and_handle completed file: " << pathFileame;
+				//LOG(INFO) << "func::detect_and_handle completed file: " << pathFileame;
+				std::cout <<  "func::detect_and_handle completed file: "  << std::endl;
 
 				//最后清理list
 				if (plateReturnList.size() > 0)
@@ -1088,7 +1104,8 @@ bool CameraMpeg::detect_and_handle(const StreamInfo& infoStream, const PictInfo&
 				return true;
 			}
 			else {
-				LOG(INFO) << "func::detect_and_handle return the json not contain the reognition result array!!! ";
+				//LOG(INFO) << "func::detect_and_handle return the json not contain the reognition result array!!! ";
+				std::cout << "func::detect_and_handle return the json not contain the reognition result array!!! " << std::endl;
 				return false;
 			}
 		}
@@ -1138,7 +1155,8 @@ bool CameraMpeg::parse_plate_return_json(Service::PlateReturn& plateReturn, std:
 	}
 	catch (std::exception& e)
 	{
-		LOG(ERROR) << "[CameraMpeg::parse_plate_return_json] " << e.what() << std::endl;
+		//LOG(ERROR) << "[CameraMpeg::parse_plate_return_json] " << e.what() << std::endl;
+		std::cout << "[CameraMpeg::parse_plate_return_json] " << e.what() << std::endl;
 		return false;
 	}
 }
@@ -1174,7 +1192,8 @@ bool CameraMpeg::get_camera_details(int& cameraId, Service::CameraDetails& camer
 		strRst = File::readJsonFile(ss_camera_details_pathfile.str());
 		if (strRst == "")
 		{
-			LOG(INFO) << "CameraMpeg::get_camera_details File::readJsonFile cameraId : [READ] camera_details_{cameraId}.json fail: " << ss_camera_details_pathfile.str();
+			//LOG(INFO) << "CameraMpeg::get_camera_details File::readJsonFile cameraId : [READ] camera_details_{cameraId}.json fail: " << ss_camera_details_pathfile.str();
+			std::cout << "CameraMpeg::get_camera_details File::readJsonFile cameraId : [READ] camera_details_{cameraId}.json fail: " << ss_camera_details_pathfile.str() << std::endl;
 		}
 	}
 	else {
@@ -1182,14 +1201,16 @@ bool CameraMpeg::get_camera_details(int& cameraId, Service::CameraDetails& camer
 		bool succ = request_token(bear_token);
 		if (!succ)
 		{
-			LOG(TRACE) << "camera_mpeg_add2::get_api_token " << succ << " FAIL";
+			//LOG(TRACE) << "camera_mpeg_add2::get_api_token " << succ << " FAIL";
+			std::cout << "camera_mpeg_add2::get_api_token " << succ << " FAIL" << std::endl;
 			return false;
 		}
 		para.Authorization = bear_token;
 		int nCode = clientCurl.Get(para, strRst);
 		if (nCode != 0)
 		{
-			LOG(TRACE) << "func::cameraMpeg::get_camera_details() fail!!! nCode =" << nCode;
+			//LOG(TRACE) << "func::cameraMpeg::get_camera_details() fail!!! nCode =" << nCode;
+			std::cout << "func::cameraMpeg::get_camera_details() fail!!! nCode =" << nCode << std::endl;
 			return false;
 		}
 		else {
@@ -1197,7 +1218,8 @@ bool CameraMpeg::get_camera_details(int& cameraId, Service::CameraDetails& camer
 			bool saveJsonResult = File::saveJsonFile(strRst, ss_camera_details_pathfile.str());
 			if (!saveJsonResult)
 			{
-				LOG(INFO) << "CameraMpeg::get_camera_details fail: " << ss_camera_details_pathfile.str();
+				//LOG(INFO) << "CameraMpeg::get_camera_details fail: " << ss_camera_details_pathfile.str();
+				std::cout << "CameraMpeg::get_camera_details fail: " << ss_camera_details_pathfile.str() << std::endl;
 				return CURLE_FAILED_INIT;
 			}
 		}
@@ -1273,7 +1295,8 @@ bool CameraMpeg::get_task_list_by_camera_id(int& cameraId, Service::TaskInfoList
 		strRst = File::readJsonFile(ss_path_file_name.str());
 		if (strRst == "")
 		{
-			LOG(INFO) << "CameraMpeg::get_task_list_by_camera_id File::readJsonFile cameraId : [READ] main_company_details_by_serialno.json fail: " << ss_path_file_name.str();
+			//LOG(INFO) << "CameraMpeg::get_task_list_by_camera_id File::readJsonFile cameraId : [READ] main_company_details_by_serialno.json fail: " << ss_path_file_name.str();
+			std::cout << "CameraMpeg::get_task_list_by_camera_id File::readJsonFile cameraId : [READ] main_company_details_by_serialno.json fail: " << ss_path_file_name.str()  << std::endl;
 		}
 	}
 	else {
@@ -1281,14 +1304,16 @@ bool CameraMpeg::get_task_list_by_camera_id(int& cameraId, Service::TaskInfoList
 		bool succ = request_token(bear_token);
 		if (!succ)
 		{
-			LOG(TRACE) << "get_task_list_by_camera_id-> camera_mpeg_add2::get_api_token " << succ << " FAIL";
+			//LOG(TRACE) << "get_task_list_by_camera_id-> camera_mpeg_add2::get_api_token " << succ << " FAIL";
+			std::cout << "get_task_list_by_camera_id-> camera_mpeg_add2::get_api_token " << succ << " FAIL" << std::endl;
 			return false;
 		}
 		para.Authorization = bear_token;
 		int nCode = clientCurl.Get(para, strRst);
 		if (nCode != 0)
 		{
-			LOG(TRACE) << "func::cameraMpeg::get_task_list_by_camera_id() fail!!! nCode =" << nCode;
+			//LOG(TRACE) << "func::cameraMpeg::get_task_list_by_camera_id() fail!!! nCode =" << nCode;
+			std::cout << "func::cameraMpeg::get_task_list_by_camera_id() fail!!! nCode =" << std::endl;
 			return false;
 		}
 		else {
@@ -1296,7 +1321,8 @@ bool CameraMpeg::get_task_list_by_camera_id(int& cameraId, Service::TaskInfoList
 			bool saveJsonResult = File::saveJsonFile(strRst, ss_path_file_name.str());
 			if (!saveJsonResult)
 			{
-				LOG(INFO) << "CameraMpeg::get_task_list_by_camera_id fail: " << ss_path_file_name.str();
+				//LOG(INFO) << "CameraMpeg::get_task_list_by_camera_id fail: " << ss_path_file_name.str();
+				std::cout << "CameraMpeg::get_task_list_by_camera_id fail: " << ss_path_file_name.str() << std::endl;
 				return CURLE_FAILED_INIT;
 			}
 		}

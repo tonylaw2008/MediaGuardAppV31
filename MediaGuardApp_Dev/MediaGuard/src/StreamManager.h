@@ -29,8 +29,8 @@ public:
 public:
 	explicit StreamMangement(Stream::StreamType nStreamType);
 	~StreamMangement();
-	void ListSupportedHD();
-	void ListDshowDevice();
+	static void list_supported_hardware();
+	static void list_dshow_device();
 	bool StartDecode(const Stream::StreamInfo& infoStream);
 	void StopDecode();
 	bool GetRtmpUrl(std::string& strRtmp);

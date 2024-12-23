@@ -43,24 +43,24 @@ StreamMangement::~StreamMangement()
 {
 }
 
-void StreamMangement::ListSupportedHD()
+void StreamMangement::list_supported_hardware()
 {
 	std::stringstream ss;
 	enum AVHWDeviceType nType = AV_HWDEVICE_TYPE_NONE;
 	while ((nType = av_hwdevice_iterate_types(nType)) != AV_HWDEVICE_TYPE_NONE)
 		ss << av_hwdevice_get_type_name(nType) << ",";
-	printf("func::ListSupportedHD - Supported hard device:%s\n ", ss.str().c_str());
+	printf("list_supported_hardware - Supported hard device:%s\n ", ss.str().c_str());
 }
 
-void StreamMangement::ListDshowDevice()
+void StreamMangement::list_dshow_device()
 {
 	AVFormatContext* pFormatCtx = avformat_alloc_context();
 	AVDictionary* options = NULL;
 	av_dict_set(&options, "list_devices", "true", 0);
 	AVInputFormat* iformat = (AVInputFormat*)av_find_input_format("dshow");
-	printf("========Device Info=============\n");
+	 
 	avformat_open_input(&pFormatCtx, "video=dummy", iformat, &options);
-	printf("================================\n");
+	printf("\n");
 	avformat_free_context(pFormatCtx);
 }
 
@@ -81,8 +81,8 @@ bool StreamMangement::StartDecode(const StreamInfo& infoStream)
 	*/
 	//獲取識別任務列表 
 	CAR_PLATE_RECOGNITION_ENABLE = GetTaskInfoIfHave(m_infoStream.nCameraId, TaskType::CAR_PLATE_RECOGNITION, cameraTaskInfo_for_CAR_PLATE_RECOGNITION);
-	LOG(INFO) << "func::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
-
+	//LOG(INFO) << "func::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
+	std::cout << "func::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
 	//-------------------------------------------------------------------------------------------------------------------------------------------------
 	bool bIsStart = m_pHandle->StartDecode(infoStream);
 
@@ -138,7 +138,8 @@ void StreamMangement::StopDecode()
 	}
 	catch (std::exception ex)
 	{
-		LOG(ERROR) << "func::StreamMangement::StopDecode()->m_thPollReconn.Stop() Exception what:" << ex.what();
+		//LOG(ERROR) << "func::StreamMangement::StopDecode()->m_thPollReconn.Stop() Exception what:" << ex.what();
+		std::cout << "func::StreamMangement::StopDecode()->m_thPollReconn.Stop() Exception what:" << ex.what() << std::endl;
 	}
 }
 
@@ -195,7 +196,8 @@ void StreamMangement::m_check_connect() {
 			case CameraConnectingStatus::InDisConnencted:  //意外断开 请求重连
 			{
 				StopDecode(); 
-				LOG(INFO) << "RTSP OF CAMERA RECONNECTING....(case=InDisConnencted) Status=" << std::to_string((int)cameraConnectingStatus);
+				//LOG(INFO) << "RTSP OF CAMERA RECONNECTING....(case=InDisConnencted) Status=" << std::to_string((int)cameraConnectingStatus);
+				std::cout << "RTSP OF CAMERA RECONNECTING....(case=InDisConnencted) Status=" << std::to_string((int)cameraConnectingStatus) << std::endl;
 				StartDecode(m_infoStream);
 				break;
 			}
@@ -203,7 +205,8 @@ void StreamMangement::m_check_connect() {
 			case CameraConnectingStatus::InRequestStopped:  //请求停止
 			{
 				StopDecode();
-				LOG(INFO) << "IN STOP REQUEST (CameraId=" << m_infoStream.nCameraId << ") STOPPING.... (case=InRequestStopped)RTSP URL" << m_infoStream.strInput << "Status=" << std::to_string((int)cameraConnectingStatus);
+				//LOG(INFO) << "IN STOP REQUEST (CameraId=" << m_infoStream.nCameraId << ") STOPPING.... (case=InRequestStopped)RTSP URL" << m_infoStream.strInput << "Status=" << std::to_string((int)cameraConnectingStatus);
+				std::cout << "IN STOP REQUEST (CameraId=" << m_infoStream.nCameraId << ") STOPPING.... (case=InRequestStopped)RTSP URL" << m_infoStream.strInput << "Status=" << std::to_string((int)cameraConnectingStatus) << std::endl;
 				break;
 			}
 			default:
@@ -367,7 +370,8 @@ bool StreamMangement::GetTaskInfoList(int& cameraId, Service::TaskInfoList& task
 			return true;
 		}
 		else {
-			LOG(INFO) << "func::StreamMangement.GetTaskInfoList FAIL!!!! TaskInfoListExpiredTimeOut = " << m_TaskInfoListRet.TaskInfoListExpiredTimeOut << std::endl;
+			//LOG(INFO) << "func::StreamMangement.GetTaskInfoList FAIL!!!! TaskInfoListExpiredTimeOut = " << m_TaskInfoListRet.TaskInfoListExpiredTimeOut << std::endl;
+			std::cout << "func::StreamMangement.GetTaskInfoList FAIL!!!! TaskInfoListExpiredTimeOut = " << m_TaskInfoListRet.TaskInfoListExpiredTimeOut << std::endl;
 			return false;
 		}
 	}

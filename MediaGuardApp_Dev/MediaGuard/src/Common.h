@@ -38,9 +38,7 @@
 #include "Common/TransCoding.h" 
 
 #include "Http/LibcurlHelper.h"
-#include "easylogging/EasyLogHelper.h" 
-
-
+ 
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>

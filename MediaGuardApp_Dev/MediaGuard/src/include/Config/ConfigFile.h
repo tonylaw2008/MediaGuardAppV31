@@ -12,7 +12,7 @@ namespace Config
  
 	static std::string kConfigDir = "conf";
 	static std::string kDeviceName = "device.json";
-	static std::string kConfigName = "config.json";
+	static std::string kConfigName = "config.json"; //作廢, 這個配置文件改為 device.json
 	static std::string kCameraList = "camera_list.json";
 	 
  

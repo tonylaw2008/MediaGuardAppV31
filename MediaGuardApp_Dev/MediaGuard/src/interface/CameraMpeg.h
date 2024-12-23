@@ -1,10 +1,13 @@
 ﻿#pragma once 
 #include <string>
-#ifdef _WIN32
-#include <Time.h> 
-#elif __linux__ 
-#include <time.h>  // 请自己补linux内容
-#endif
+
+//項目本來有一個Time.h的文件 應該不需要下面的做法 引用系統的 2024-12-22
+//#ifdef _WIN32
+//#include <Time.h> 
+//#elif __linux__ 
+//#include <time.h>  // 请自己补linux内容
+//#endif
+
 #include <sstream> 
 #include <stdbool.h> 
 namespace Service
@@ -354,11 +357,13 @@ public:
 
 	int query_stream_info_record(Service::StreamInfoApiList& streamInfoApiList, const std::string& strMsg, std::string& strRst);
 
-	void stream_info_start_list(Service::StreamInfoApiList& streamInfoApiList);
+	//應該是沒用到的
+	//void stream_info_start_list(Service::StreamInfoApiList& streamInfoApiList);
 
 	void get_stream_info(Service::StreamInfoForApi& streamInfoForApi, StreamInfo& infoStream);
 
-	void stream_handle_start(StreamInfo& infoStream);
+	//應該是沒用到的
+	//void stream_handle_start(StreamInfo& infoStream);
 
 	bool detect_and_handle(const StreamInfo& infoStream, const PictInfo& pict_info);
 

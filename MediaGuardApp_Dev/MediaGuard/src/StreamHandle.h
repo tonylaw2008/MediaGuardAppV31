@@ -25,6 +25,5 @@ public:
 	virtual bool PopFrame(PictInfo& pictInfo) = 0; //获取图片
 	virtual void GetRtmpUrl(std::string& strRtmp) = 0;
 	virtual CameraConnectingStatus get_camera_connecting_status() = 0;
-	virtual void get_stream_info(StreamInfo& streamInfo) = 0; //返回 StreamInfo
-
+	virtual void get_stream_info(StreamInfo& streamInfo) = 0; //返回 StreamInfo 
 };

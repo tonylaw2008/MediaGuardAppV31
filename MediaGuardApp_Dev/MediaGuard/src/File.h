@@ -102,7 +102,7 @@ public:
 	* FileTimeToSystemTime(&ftCreate, &stUTC1);
 	* SystemTimeToTzSpecificLocalTime(NULL, &stUTC1, &stLocal1);
 	*/  
-	static bool get_file_info(const std::string& strFilePath, int& iCreateTime, int& iModifyTime, int& iAccessTime, int& iFileLen) {
+	static bool get_file_info(const std::string& strFilePath, int& iCreateTime, int& iFileLen) {
 		try {
 			fs::path filepath(strFilePath);
 
@@ -115,10 +115,7 @@ public:
 		 
 			iFileLen = static_cast<int>(fs::file_size(filepath)); 
 			auto lstTime = fs::last_write_time(filepath); 
-			iModifyTime = std::chrono::duration_cast<std::chrono::milliseconds>(lstTime.time_since_epoch()).count();    
-			iAccessTime = iModifyTime;  //先應付需求,後續解決
-			iCreateTime = iModifyTime;  //先應付需求,後續解決
-			 
+			iCreateTime = std::chrono::duration_cast<std::chrono::milliseconds>(lstTime.time_since_epoch()).count(); 
 		}
 		catch (const std::exception& e) {
 			std::cerr << "\nError while getting file info: " << e.what() << "\n" << std::endl;
@@ -231,9 +228,14 @@ public:
 		std::string jsonString = "";
 		// 載入 JSON 檔案
 		const char* filename = strFile.c_str();
-		FILE* fp = fopen(filename, "rb");
+
+		//FILE* fp = fopen(filename, "rb");
+
+		FILE* fp = nullptr;
+		fopen_s(&fp, filename, "rb");
+		  
 		if (!fp) {
-			std::cerr << "\nCAN NOT OPEN JSON FILE : " << filename << "\n" << std::endl;
+			std::cerr << "\nCAN NOT OPEN JSON FILE : " << filename << "\n" << std::endl; 
 			return jsonString;
 		}
 
@@ -320,5 +322,4 @@ public:
 			return path_file_name;
 		}
 	}
-
 };

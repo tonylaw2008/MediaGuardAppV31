@@ -1238,7 +1238,7 @@ cmake --version
 
 下载地址：https://opencv.org/releases/
 
-（1）windows安装
+##### （1）windows安装
 
 windows我们直接下载opencv-4.8.1-windows.exe，然后解压到对应目录即可，我这里解压如下到D:\install\opencv，该目录下结构
 
@@ -1254,15 +1254,61 @@ windows我们直接下载opencv-4.8.1-windows.exe，然后解压到对应目录�
 
 根据需要是否选择cuda相关选项
 
+新版本 Visual Studio 2022的出來情況
+
+ ./sources/cmake/OpenCVDetectCXXCompiler.cmake 增加一個else if 來判斷是否 vs 1942版 ("^19[34][0-9]$")
+
+```
+# 比較新的VS2022 update V12版本無法被opencv4.8.1識別,需要折衝修改如下:
+elseif(MSVC_VERSION MATCHES "^193[0-9]$")
+    set(OpenCV_RUNTIME vc17)
+
+elseif(MSVC_VERSION MATCHES "^19[34][0-9]$")
+    set(OpenCV_RUNTIME vc17)
+```
+
+如果不安裝 CUDA DNN
+
+**WITH_CUDNN = false**
+
 ![image-20240321182710769](README_IMGS/image-20240321182710769.png)
 
-添加cuda_toolkit_root_dir
+![image-20241209160716109](README_IMGs/README_安裝與部署/image-20241209160716109.png)
+
+添加 CUDA_TOOLKIT_ROOT_DIR
+
+**本機是 C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1** (CUDA 識別不了VS2022 update12版本導致bianyi編譯出錯)
+
+升級為 : C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6
+
+<img src="README_IMGs/README_安裝與部署/image-20241209223150669.png" alt="image-20241209223150669" style="zoom:67%;" />
 
 ![image-20240322101815761](README_IMGS/image-20240322101815761.png)
+
+![image-20241210114840288](README_IMGs/README_安裝與部署/image-20241210114840288.png)
+
+**升級CUDA 12.6的SUMARY如下:**
+Installed:
+
+Nsight for Visual Studio 2022
+ Nsight Monitor
+Not Installed:
+- Nsight for Visual Studio 2019
+  Reason: VS2019 was not found
+- Nsight for Visual Studio 2017
+  Reason: VS2017 was not found
+- Integrated Graphics Frame Debugger and Profiler
+  Reason: see https://developer.nvidia.com/nsight-vstools
+- Integrated CUDA Profilers
+  Reason: see https://developer.nvidia.com/nsight-vstools
 
 配置扩展模块
 
 ![image-20240321182924664](README_IMGS/image-20240321182924664.png)
+
+**OPENCV_EXTRA_MODULES_PATH = C:/opencv/opencv_contrib/modules**
+
+​	如圖: 	![image-20241209175850708](README_IMGs/README_安裝與部署/image-20241209175850708.png)
 
 设置生成world, 也可以不勾选，不勾选的会vs生成后 会有很多个lib，勾选了 就只有opencv_world lib 文件
 
@@ -1278,7 +1324,22 @@ windows我们直接下载opencv-4.8.1-windows.exe，然后解压到对应目录�
 
 ![image-20240321183356474](README_IMGs/README/image-20240321183356474.png)
 
+###### 安裝CUDA
+
+確保您的 NVIDIA 顯卡支持 NVDEC 和 NVENC (編碼解碼) 
+CUDA與版本對照表(Video Encode and Decode GPU Support Matrix)  
+
+https://developer.nvidia.com/video-encode-and-decode-gpu-support-matrix-new?locale=en
+
+**cuda_12.6.3_561.17_windows** 
+
 设置显卡算力 6.1，因为在tensorflow和显卡的版本对应中是找不到Geforce MX250的(通过网络查找到)
+
+**WITH_NVCUVENC**  
+环境中缺少Nvidia Video Codec SDK，可以安装NVIDIA Video Codec SDK： [NVIDIA Video Codec SDK下载链接](https://developer.nvidia.com/video-codec-sdk)， 或者cmake中搜索**WITH_NVCUVENC 取消勾选**
+
+![image-20241209181319320](README_IMGs/README_安裝與部署/image-20241209181319320.png)
+
 显卡算力 查询：https://developer.nvidia.cn/cuda-gpus
 
 ![img](README_IMGs/README/2323423456890586.png)
@@ -1297,7 +1358,6 @@ Thu Mar 21 18:36:43 2024
 | N/A   55C    P0    N/A /  N/A |     64MiB /  2048MiB |      3%      Default |
 |                               |                      |                  N/A |
 +-------------------------------+----------------------+----------------------+
-
 +-----------------------------------------------------------------------------+
 | Processes:                                                                  |
 |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
@@ -1305,7 +1365,32 @@ Thu Mar 21 18:36:43 2024
 |=============================================================================|
 |  No running processes found                                                 |
 +-----------------------------------------------------------------------------+
+========================================================================================================
+nvidia-smi 另一款顯卡
+========================================================================================================
+Mon Dec  9 15:36:37 2024
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 538.18                 Driver Version: 538.18       CUDA Version: 12.2     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                     TCC/WDDM  | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA GeForce GTX 1650 ...  WDDM  | 00000000:01:00.0 Off |                  N/A |
+| N/A   56C    P0              14W /  35W |      0MiB /  4096MiB |      3%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
++---------------------------------------------------------------------------------------+
+| Processes:       GeForce GTX 1650 Max-Q                                               |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
++---------------------------------------------------------------------------------------+
 ```
+
+![image-20241210020459232](README_IMGs/README_安裝與部署/image-20241210020459232.png)
+
+![image-20241219114331119](README_IMGs/README_安裝與部署/image-20241219114331119.png)
 
 ![image-20240322083310226](README_IMGs/README/image-20240322083310226.png)
 
@@ -1313,14 +1398,40 @@ Thu Mar 21 18:36:43 2024
 
 ![image-20240322083419665](README_IMGs/README/image-20240322083419665.png)
 
-勾选完成后config，再generate.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+###### 安装DNN
+
+WITH_NVCUVID 取消勾選以消除:
+
+ OPENCV_DNN_CUDA=OFF 安装DNN 需要开启 否则关闭（OFF）
+
+![image-20241209223913350](README_IMGs/README_安裝與部署/image-20241209223913350.png)
+
+上述應該是沒有安裝 cuDNN（CUDA Deep Neural Network Library）,只是安裝CUDA
+
+首先确认CUDA Toolkit和cuDNN是否正确安装。
+若正确安装则，勾选Advance选项，搜索cudnn，将CUDNN_LIBRARY项设置为cudnn.lib
+位置一般在C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\lib\x64下。
+
+(CUDNN_INCLUDE_DIR = C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include )
+
+下載對應 cuDNN版本:https://developer.nvidia.com/rdp/cudnn-archive 这里下载： [Download cuDNN v8.8.1 (March 8th, 2023), for CUDA 12.x](https://developer.nvidia.com/rdp/cudnn-archive#a-collapse881-120) (這個12.2cuda版本不能識別 VS2022 17.X 提示12.4以上CUDA,此處下載 cuda_12.6.3_561.17_windows.exe)
+
+![image-20241210115907106](README_IMGs/README_安裝與部署/image-20241210115907106.png)
+
+
+
+**勾选完成后config，再generate.**
 
 错误解决：Can't get model file for face alignment
 
 解决方法：
 
 ```shell
-#下载face_landmark_model.dat
+#下载face_landmark_model.dat 配置人臉識別
+#face_landmark_model.dat 是 OpenCV 中用于面部标记检测的预训练模型文件。这个模型用于检测人脸图像中的特征点，例如眼睛、鼻子、嘴巴、耳朵等2。这些特征点可以用于各种应用，例如人脸识别、面部表情分析、面部替换、面部平均等
+
 https://raw.githubusercontent.com/opencv/opencv_3rdparty/8afa57abc8229d611c4937165d20e2a2d9fc5a12/face_landmark_model.dat
 #放到本地文件(file:/E:/nginx-1.18.0/html/)或上传到nginx
 http://192.168.8.19:81/face_landmark_model.dat
@@ -1346,6 +1457,12 @@ ocv_download(
 
 ![image-20240401085150863](README_IMGs/README/image-20240401085150863.png)
 
+```
+C:\opencv\build下找到OPENCV.sln，打开，找到CMakeTargets下的INSTALL，在Debug和Release下分别右键生成即可。
+```
+
+
+
 修改cmake为GPU版本的安装路径
 
 ```cmake
@@ -1365,9 +1482,9 @@ elseif(UNIX)
 endif()
 ```
 
-（2）linux安装
+##### （2）linux安装
 
-centos下安装过程如下
+###### centos下安装过程如下
 
 ```shell
 #安装相关依赖
@@ -1416,7 +1533,7 @@ pkg-config --modversion opencv4
 4.8.1
 ```
 
-Ubuntu下安装过程如下
+###### Ubuntu下安装过程如下
 
 ```shell
 #更新系统包索引并升级系统
@@ -1447,7 +1564,7 @@ mkdir build
 cd build
 #OpenCV 默认假设构建类型为 “Release”，安装路径为 “/usr/local”
 #启用WITH_CUDA=1表示编译支持GPU的opencv，
-#CUDA_ARCH_BIN根据自己的gpu架构填写如GTX1050（1080）Tesla P100，不然GPU还是不能用
+#CUDA_ARCH_BIN根据自己的gpu架构填写如GTX1050（1080）Tesla P100，不然GPU还是不能用  本機是 6.1 搜索本文"6.1"見說明
 #可以指定自己的版本，加快编译
 #GPU架构查询，去查查自己显卡适配的计算架构：https://developer.nvidia.com/cuda-gpus
 #如RTX3060推荐的是8.6
@@ -1848,6 +1965,8 @@ cd ffmpeg
 
 git checkout n4.2.2 撤換到這個FFmpeg 4.2.2 版本 
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ##### oatpp-websocket
 
 实际使用发现oatpp仅仅包含http服务相关业务，如果需要做websocket客户端则需要其下的oatpp-websocket来实现。所以需要下载编译
@@ -1951,6 +2070,75 @@ if(SPDLOG_BUILD_EXAMPLE_HO)
     target_link_libraries(example_header_only PRIVATE spdlog::spdlog_header_only)
 endif()
 ```
+
+##### OpenSSL 1.1.1q Linux安裝
+
+如果你需要指定使用 OpenSSL 版本 `openssl-1.1.1q`，可以按照以下步驟進行：
+
+1. **下載 OpenSSL 1.1.1q**：
+   首先，從 OpenSSL 的官方網站或 GitHub 頁面下載 `openssl-1.1.1q` 的源碼包。
+
+   你可以使用以下命令下載：
+
+   ```bash
+   wget https://www.openssl.org/source/openssl-1.1.1q.tar.gz
+   ```
+
+   然後解壓縮：
+
+   ```bash
+   tar -xzvf openssl-1.1.1q.tar.gz
+   ```
+
+2. **編譯與安裝 OpenSSL**：
+   進入解壓後的目錄，然後編譯和安裝 OpenSSL：
+
+   ```bash
+   cd openssl-1.1.1q
+   ./config --prefix=/usr/local/openssl-1.1.1q
+   make
+   sudo make install
+   ```
+
+3. **設置環境變數**：
+   安裝完成後，需要設置環境變數，以便編譯時能找到正確的 OpenSSL 版本。可以在你的 `.bashrc` 或 `.bash_profile` 中添加以下內容：
+
+   ```bash
+   export LD_LIBRARY_PATH=/usr/local/openssl-1.1.1q/lib:$LD_LIBRARY_PATH
+   export PKG_CONFIG_PATH=/usr/local/openssl-1.1.1q/lib/pkgconfig:$PKG_CONFIG_PATH
+   ```
+
+   然後執行以下命令使變更生效：
+
+   ```bash
+   source ~/.bashrc
+   ```
+
+4. **在 CMake 中指定 OpenSSL 路徑**：
+   如果你使用 CMake，可以在你的 `CMakeLists.txt` 中添加以下內容來指定 OpenSSL 的路徑：
+
+   ```cmake
+   set(OPENSSL_ROOT_DIR /usr/local/openssl-1.1.1q)
+   find_package(OpenSSL REQUIRED)
+   ```
+
+5. **重新生成 Ninja 文件**：
+   在修改 CMake 配置後，重新運行 CMake 來生成 Ninja 文件：
+
+   ```bash
+   cmake -S . -B build
+   ```
+
+6. **執行 Ninja**：
+   最後，使用 Ninja 進行編譯：
+
+   ```bash
+   ninja -C build
+   ```
+
+這樣應該可以正確指定並使用 OpenSSL 版本 `openssl-1.1.1q`。如果在過程中遇到任何問題，請隨時告訴我！
+
+
 
 
 
@@ -2497,4 +2685,4 @@ congratulations! automatic annotation images is over!
 
  
 
- 
+ cuda_toolkit_root_dir

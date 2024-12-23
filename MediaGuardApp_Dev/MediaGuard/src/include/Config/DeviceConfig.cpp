@@ -5,8 +5,7 @@
 #include "DeviceConfig.h"
 #include "../../Common.h"
 
-#include "../Basic/CrossPlat.h"  
-#include "../easylogging/EasyLogHelper.h"
+#include "../Basic/CrossPlat.h"   
 #include "../Common/JsonHelper.h"
 #include "../Common/Macro.h" 
 #include "../ErrorInfo/ErrorCode.h"
@@ -26,8 +25,8 @@ bool DeviceConfig::Init()
 	const std::string config_content = File::readJsonFile(file_path);
 	bool res = parse_config(config_content);
 	if (res == false)
-		LOG(INFO) << "device.json file format required only utf8(no bom):\n" << file_path;
-
+		//LOG(INFO) << "device.json file format required only utf8(no bom):\n" << file_path;
+		std::cout <<  "device.json file format required only utf8(no bom):\n"   << std::endl;
 	return res;
 }
  

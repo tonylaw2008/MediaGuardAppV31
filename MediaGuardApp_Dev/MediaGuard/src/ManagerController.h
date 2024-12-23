@@ -1,10 +1,11 @@
 ﻿#pragma once
+#include <cstdlib> // for system()
 #include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <atomic>
-#include <chrono>
+
 #include <thread>
 #include <list>
 #include <memory>
@@ -12,6 +13,9 @@
 #include <errno.h> 
 #include <signal.h>
 #include "StreamManager.h"
+
+#include <chrono>
+#include <filesystem>
 
 class ManagerController
 {
@@ -31,7 +35,7 @@ public:
 	~ManagerController();
 
 public:
-	static std::string generate_directory(FileNameType type, std::string& video_path_str, std::string& audio_path_str, std::string& picture_path_str, std::string& hls_path_str);
+	//static std::string generate_directory(FileNameType type, std::string& video_path_str, std::string& audio_path_str, std::string& picture_path_str, std::string& hls_path_str);
 	void Init();
 	void Uninit();
 	void run_media_list();
@@ -54,5 +58,9 @@ public:
 	static void http_server_start();
 	static void create_main_media_folder();
 
- 
+	static void clearScreen();
+	 
+	template<typename TP>
+	static std::time_t to_time_t(TP tp);
+
 };

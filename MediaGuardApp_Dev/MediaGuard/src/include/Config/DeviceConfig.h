@@ -46,7 +46,7 @@ public:
 		int device_port = 8080;
 		std::string device_serial_no;
 		std::string device_serial_no_hmac;
-		bool device_is_online_always;
+		bool device_is_online_always = false;
 		std::string user = "admin";
 		std::string password = "0192023A7BBD73250516F069DF18B500";
 		std::string password_format = "md5_32_upcase (default)";

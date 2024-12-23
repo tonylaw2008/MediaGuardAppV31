@@ -39,6 +39,34 @@ GlobalSetting.nHDType 设置硬件类型，目标是显卡解码。StreamInfo.nH
 	4. 還有一個是邏輯轉換的api camera_list_trans_to_strean_info， 主要是把雲端邏輯轉換為具體情況的：
 	5. 例如：bRtmp = ttrue是開啟RTMP的，但新規則改為 StreamDecodeType (StreamInfo.nStreamDecodeType)的類型，HLS/RTMP/進行切換。
 	6. 目前網上雲端沒有bRtmp對應的參數，對應的 CamSettingNSchedule。RtmpOutput和雲端對應的沒有UI改動的，只有默認FALSE.所有對RTMP比較混亂的，所以默認就是FALSE
+	---------------------------------------------------------------------------------------------------------
+	RtspStreamHandle.cpp 對象傳入參數詳細說明
+	
+	struct StreamInfo
+	{
+		int nCameraId = 0;						//No.1	 CameraId
+		std::string rtspIp = "192.168.0.111";	//No.1b  补充Camera IP
+		int nHDType = kHWDeviceTypeNone;		//No.2   hard device accelate   kHWDeviceTypeNone = 0
+		std::string strInput;					//No.3   input rtsp://root2:123456@192.168.10.90:554/axis-media/media.amp?videocodec=h264&resolution=640x480
+		bool bSavePic = false;					//No.4   save frame
+		int mediaFormate = (int)MediaFormate::MPEG;				//No.5   存储为MPEG 
+		int savePictRate = 40;					//No.7   帧率/savePictRate = 保存的频率 每25帧保存5帧 
+		bool bSaveVideo = false;				//No.8   save video 
+		int64_t nVideoTime = 60 * 1000 * 5; ;	//No.9   录像时间 time for each video
+		int  nStreamDecodeType = StreamDecodeType::NOSTREAM;	//No.10  bRtmp 改为解码流类型
+		std::string strOutput = "rtmp://127.0.0.1:1935/live/"
+			+ std::to_string(nCameraId);		//No.11
+	
+		int nWidth = 0;					//No.12  system default value  
+		int nHeight = 0;				//No.13  system default value
+		int nPixFmt = -1;				//No.14  system default value // AVPixelFormat::AV_PIX_FMT_NONE = -1,
+	
+		int nFrameRate = 25;			//No.15  帧率 只用于整除计算多少帧保存一次图片 system default value
+		int nVideoIndex = -1;			//No.16  system default value
+		int nAudioIndex = -1;			//No.17  system default value
+		int nRefCount = 0;				//No.18  av_dict_set(&pOptions, "refcounted_frames", m_infoStream.nRefCount ? "1" : "0", 0);
+		bool bRtmp = false;				//No.19  保留用于兼容AudioStreamHandle和UsbStreamHandle 后续开发这两个需要去掉，统一使用RtspStreamHandle的逻辑
+	};
 
 ---
 通過共享指針實現獲取控制單元。
@@ -100,10 +128,3 @@ MediaGuard 錄像系統的HTTP SERVER 請求與響應的測試，具體參考文
 
 [HttpServer_README.md]: MediaGuard/httpserver/HttpServer_README.md
 
- 
-
-<img src="TEST\test20230808\test20230808214611.jpg" style="zoom:67%;" />
-
-<img src="TEST\test20230808\test20230808214612.jpg" alt="test20230808214612" style="zoom:67%;" />
-
-<img src="TEST\test20230808\test20230808214619.jpg" alt="test20230808214619" style="zoom:67%;" />

@@ -19,7 +19,8 @@ namespace Stream {
 
 	bool CarPlate::detect_and_handle1(std::string& path_filename)
 	{
-		LOG(INFO) << "func::CarPlate::detect_and_handle path_filename=" << path_filename << "\n";
+		//LOG(INFO) << "func::CarPlate::detect_and_handle path_filename=" << path_filename << "\n";
+		std::cout << "Func::CarPlate::detect_and_handle path_filename=" << path_filename << "\n" << std::endl;
 		bool ret = false;
 		std::string strRst;
 		LibcurlHelper clientCurl;
@@ -27,13 +28,11 @@ namespace Stream {
 		para.strUrl = DEVICE_CONFIG.cfgCarPlateRecogBusiness.http_detect_server_api;
 		para.nConnectTimeout = 100; //毫秒
 		para.nTransTimeout = 3000; //毫秒
-
-		LOG(INFO) << path_filename;
-
+		 
 		const std::string pathFileame = path_filename;
 
 		int nCode = clientCurl.UploadFile(para, pathFileame, strRst);
-		LOG(INFO) << strRst;
+	 
 		rapidjson::Document doc;
 		JS_PARSE_OBJECT_RETURN(doc, strRst, false);
 

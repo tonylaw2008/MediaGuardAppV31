@@ -1,5 +1,4 @@
 ﻿#pragma once
-// #include "common.h"
 #include "Common.h"
 #include <string>
 #include <opencv2/core/hal/interface.h> 
@@ -46,7 +45,7 @@ namespace Stream
 		int videoRemainMinutes = 15; //无论超出容量限制都要最少保留15分钟的video，预设必须考虑最少可以存储15分钟的影片
 		int64_t storageLimitedbytes = 3 * 102400000;  //102400 kb //100m
 		// hard device accelate
-		HWDeviceType nHDType = kHWDeviceTypeNone; //硬件类型 默认是没有
+		HWDeviceType nHDType = HWDeviceType::kHWDeviceTypeNone; //硬件类型 默认是没有
 	};
 
 	enum StreamType
@@ -93,7 +92,7 @@ namespace Stream
 	{
 		int nCameraId = 0;										//No.1	 CameraId
 		std::string rtspIp = "192.168.0.111";					//No.1b  补充Camera IP
-		int nHDType = kHWDeviceTypeNone;						//No.2   hard device accelate   kHWDeviceTypeNone = 0
+		int nHDType = kHWDeviceTypeNone ;					    //No.2   hard device accelate   kHWDeviceTypeNone = 0 kHWDeviceTypeCUDA kHWDeviceTypeNone;
 		std::string strInput;									//No.3   input rtsp://root2:123456@192.168.10.90:554/axis-media/media.amp?videocodec=h264&resolution=640x480
 		bool bSavePic = false;									//No.4   save frame
 		int mediaFormate = (int)MediaFormate::MPEG;				//No.5   存储为MPEG 

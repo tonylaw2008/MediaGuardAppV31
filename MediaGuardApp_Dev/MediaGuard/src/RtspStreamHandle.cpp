@@ -11,7 +11,6 @@
 #include "RtspStreamHandle.h"  
 #include "interface/CameraMpeg.h"
 
-
 using namespace Stream;
 namespace fs = std::filesystem;
 // avformat_open_input/av_read_frame timeout callback
@@ -42,7 +41,8 @@ int RtspStreamHandle::hw_decoder_init(AVCodecContext* ctx, const enum AVHWDevice
 	if ((nCode = av_hwdevice_ctx_create(&m_pHDCtx, type, NULL, NULL, 0)) < 0) {
 		fprintf(stderr, "Failed to create specified HW device.maybe no hardware available \n");
 
-		LOG(INFO) << "Failed to create specified hardware device for ffmpeg decode/encode.maybe no hardware available \n" << std::endl;
+		//LOG(INFO) << "Failed to create specified hardware device for ffmpeg decode/encode.maybe no hardware available \n" << std::endl;
+		std::cout << "Failed to create specified hardware device for ffmpeg decode/encode.maybe no hardware available \n" << std::endl;
 
 		return nCode;
 	}
@@ -80,7 +80,8 @@ RtspStreamHandle::~RtspStreamHandle()
 }
 
 bool RtspStreamHandle::StartDecode(const StreamInfo& infoStream)
-{
+{ 
+	//複製給內存的變量m_infoStream
 	m_infoStream = infoStream;
 
 	//判斷 hls/{cameraId}目錄是否存在 
@@ -116,7 +117,10 @@ void RtspStreamHandle::StopDecode()
 		m_pHDCtx = nullptr;
 	}
 	m_poolSavePic.Stop();
-	sws_freeContext(m_pSwsCtx);
+	if (m_pSwsCtx)
+	{
+		sws_freeContext(m_pSwsCtx);
+	} 
 }
 
 void RtspStreamHandle::GetRtmpUrl(std::string& strRtmp)
@@ -149,20 +153,13 @@ void RtspStreamHandle::PushFrame(const cv::Mat& frame)
 			PictInfo pictInfo;
 			pictInfo.camera_id = m_infoStream.nCameraId;
 			pictInfo.path_filename = filename;
-			
-#ifdef DEBUG //TEST
-			LOG(INFO) << "\nfunc::RtspStreamHandle::PushFrame std::string path_filename = filename; path_filename = " << filename;
-#endif // DEBUG 
-			
+			 
 			int64_t create_time = Time::GetMilliTimestamp();
 			int width = m_infoStream.nWidth;
 			int height = m_infoStream.nHeight;
 			//计算Mat2Base64函数耗时 
 			pictInfo.frameBase64 = Basic::CvMatToBase64::Mat2Base64(frame, ".jpg");  //avg of elapsed time = 40-70ms 
- 
-#ifdef DEBUG //TEST
-			LOG(INFO) << "\nfunc::RtspStreamHandle::PushFrame path_filename = " << pictInfo.path_filename;
-#endif // DEBUG 
+  
 			m_listFrame.push_back(pictInfo);
 		}
 	}
@@ -181,7 +178,8 @@ bool RtspStreamHandle::start_decode()
 {
 	if (!open_input_stream())  //加个while 持续尝试打开
 	{
-		LOG(ERROR) << "cameraId=" << m_infoStream.nCameraId << " Can't open input:" << m_infoStream.strInput.c_str() << " \nCameraConnectingStatus = " << std::to_string((int)CameraConnectingStatus::InDisConnencted);
+		//LOG(ERROR) << "cameraId=" << m_infoStream.nCameraId << " Can't open input:" << m_infoStream.strInput.c_str() << " \nCameraConnectingStatus = " << std::to_string((int)CameraConnectingStatus::InDisConnencted);
+		std::cout << "cameraId=" << m_infoStream.nCameraId << " Can't open input:" << m_infoStream.strInput.c_str() << " \nCameraConnectingStatus = " << std::to_string((int)CameraConnectingStatus::InDisConnencted) << std::endl;
 		cameraConnectingStatus = CameraConnectingStatus::InDisConnencted;
 	}
 	else {
@@ -234,6 +232,7 @@ bool RtspStreamHandle::open_input_stream()
 		return false;
 	}
 	std::cout << "\nCameraId=" + std::to_string(m_infoStream.nCameraId) << " Open input[" << m_infoStream.strInput << "] success.\n";
+	 
 
 	// retrieve stream information 获取音视频信息
 	if (avformat_find_stream_info(m_pInputAVFormatCtx, 0) < 0)
@@ -242,22 +241,24 @@ bool RtspStreamHandle::open_input_stream()
 		return false;
 	}
 	//display pFormatCtx->streams 把音视频信息打印出来
-	std::cout << "\n-------------------------- device infomation --------------------------\n" << std::endl;
+	std::cout << "\n-------------------------- Device Infomation --------------------------\n" << std::endl;
 	std::cout << "--------------------------" << " CameraId=" + std::to_string(m_infoStream.nCameraId) << " --------------------------\n" << std::endl;
 
 	av_dump_format(m_pInputAVFormatCtx, 0, m_infoStream.strInput.c_str(), 0);
 
 	// open codec context for video
-	if (open_codec_context(m_infoStream.nVideoIndex, &m_pVideoDecoderCtx, m_pInputAVFormatCtx, AVMEDIA_TYPE_VIDEO)) {
+	bool video_decoder_succ = open_codec_context(m_infoStream.nVideoIndex, &m_pVideoDecoderCtx, m_pInputAVFormatCtx, AVMEDIA_TYPE_VIDEO);
+	if (video_decoder_succ) {
 		m_infoStream.nWidth = m_pVideoDecoderCtx->width;
 		m_infoStream.nHeight = m_pVideoDecoderCtx->height;
 		m_infoStream.nPixFmt = m_pVideoDecoderCtx->pix_fmt;
 	}
 	else
 	{
-		std::cout << "CameraId=" << std::to_string(m_infoStream.nCameraId) << " Open codec context failed\n" << std::endl;
+		std::cout << "\nCameraId=" << std::to_string(m_infoStream.nCameraId) << " Open codec context failed\n" << std::endl;
 		return false;
 	}
+
 	// 返回音频解码上下文 与 输入格式 (open_codec_context函数先写好才能如下使用)
 	//open codec context for audio
 	bool audio_decoder_succ = open_codec_context(m_infoStream.nAudioIndex, &m_pAudioDecoderCtx, m_pInputAVFormatCtx, AVMEDIA_TYPE_AUDIO);
@@ -270,73 +271,126 @@ bool RtspStreamHandle::open_input_stream()
 
 	return true;
 }
-
-/* 
-*參考技術文庫 
-* https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/decode.html
+ 
+/*
+* 打開解碼器
+*參考技術文庫
+* https://ffmpeg.xianwaizhiyin.net/api-ffmpeg/decode.html 
+* https ://blog.csdn.net/weixin_43147845/article/details/136834165
+* avMediaType 是傳入確定是 VIDEO 還是AUDIO 
 */
-bool RtspStreamHandle::open_codec_context(int& nStreamIndex, AVCodecContext** pDecoderCtx, AVFormatContext* pFmtCtx, enum AVMediaType nMediaType)
+/** 
+ * enum AVHWDeviceType {
+ *     AV_HWDEVICE_TYPE_NONE,
+ *     AV_HWDEVICE_TYPE_VDPAU,
+ *     AV_HWDEVICE_TYPE_CUDA,
+ *     AV_HWDEVICE_TYPE_VAAPI,
+ *     AV_HWDEVICE_TYPE_DXVA2,
+ *     AV_HWDEVICE_TYPE_QSV,
+ *     AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
+ *     AV_HWDEVICE_TYPE_D3D11VA,
+ *     AV_HWDEVICE_TYPE_DRM,
+ *     AV_HWDEVICE_TYPE_OPENCL,
+ *     AV_HWDEVICE_TYPE_MEDIACODEC,
+ *     AV_HWDEVICE_TYPE_VULKAN,
+ * }
+ * 通过 av_hwdevice_get_type_name  
+ *   hw_type_names[] = {
+ *     [AV_HWDEVICE_TYPE_CUDA]   = "cuda",
+ *     [AV_HWDEVICE_TYPE_DRM]    = "drm",
+ *     [AV_HWDEVICE_TYPE_DXVA2]  = "dxva2",
+ *     [AV_HWDEVICE_TYPE_D3D11VA] = "d3d11va",
+ *     [AV_HWDEVICE_TYPE_OPENCL] = "opencl",
+ *     [AV_HWDEVICE_TYPE_QSV]    = "qsv",
+ *     [AV_HWDEVICE_TYPE_VAAPI]  = "vaapi",
+ *     [AV_HWDEVICE_TYPE_VDPAU]  = "vdpau",
+ *     [AV_HWDEVICE_TYPE_VIDEOTOOLBOX] = "videotoolbox",
+ *     [AV_HWDEVICE_TYPE_MEDIACODEC] = "mediacodec",
+ *     [AV_HWDEVICE_TYPE_VULKAN] = "vulkan",
+ * }
+ * 
+ * AV_PIX_FMT_QSV 英特尔的qsv
+ * AV_PIX_FMT_CUDA 英伟达cuda
+ * 
+ * 之前的版本: https://github.com/lawtatfaitony/MediaGuardCmakeV3/blob/main/MediaGuard_Cmake/MediaGuard/src/RtspStreamHandle.cpp
+ */
+bool RtspStreamHandle::open_codec_context(int& nStreamIndex, AVCodecContext** pDecoderCtx, AVFormatContext* pFmtCtx, enum AVMediaType avMediaType)
 {
 	AVStream* pStream = nullptr;
 	AVCodec* pDecoder = nullptr;
 	AVDictionary* pOptions = nullptr;
- 
+
 #ifdef _WIN32
-	int stream_index = av_find_best_stream(pFmtCtx, nMediaType, -1, -1, (AVCodec**)&pDecoder, 0);  //據說可以 把參數 AVCodec **decoder_ret 傳入 null
+	int stream_index = av_find_best_stream(pFmtCtx, avMediaType, -1, -1, (AVCodec**)&pDecoder, 0);  //據說可以 把參數 AVCodec **decoder_ret 傳入 null
 #endif 
 
 #ifdef __linux__
-	int stream_index = av_find_best_stream(pFmtCtx, nMediaType, -1, -1, (const AVCodec**)&pDecoder, 0);
+	int stream_index = av_find_best_stream(pFmtCtx, avMediaType, -1, -1, (const AVCodec**)&pDecoder, 0);
 #endif 
-	
+
 
 	if (stream_index < 0)
 	{
-		fprintf(stderr, "Couldn't find %s stream in input\n", av_get_media_type_string(nMediaType));
+		fprintf(stderr, "Couldn't find %s stream in input\n", av_get_media_type_string(avMediaType));
 		return false;
 	}
 	nStreamIndex = stream_index;
-	AVPixelFormat nPixeFmt = AV_PIX_FMT_NONE;
 
-	if (AVMEDIA_TYPE_VIDEO == nMediaType && m_infoStream.nHDType > AV_HWDEVICE_TYPE_NONE)
+	//初始化像素格式的值
+	//nPixeFmt 獲得像素格式格式 CUDA的像素格式 : AV_PIX_FMT_CUDA 
+	AVPixelFormat nPixeFmt = AV_PIX_FMT_NONE;
+	
+	//if (AVMEDIA_TYPE_VIDEO == avMediaType && m_infoStream.nHDType > AV_HWDEVICE_TYPE_NONE)
+	if (AVMEDIA_TYPE_VIDEO == avMediaType)
 	{
-		// get hard device
+		// 是否存在 NVIDIA CUDA 硬件支持 如果存在 則 nPixeFmt 賦值為支持的像素格式 
 		for (int i = 0;; i++)
 		{
 			try {
 				const AVCodecHWConfig* pConfig = avcodec_get_hw_config(pDecoder, i);
-				if (nullptr == pConfig) continue;
-				if (!pConfig)
+				if (nullptr == pConfig)
 				{
+					break;
+				}
+
+				if (!pConfig)
+				{ 
 					fprintf(stderr, "Decoder %s does not support device type %s.\n",
-						pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType)); 
-					  //打印解码器类型
+						pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
+					//打印解码器类型
 					av_log(NULL, AV_LOG_INFO, "Decoder %s does support device type %s.\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
-				    LOG(INFO) << "\nDecoder " << pDecoder->name << " does support device type" << "av_hwdevice_get_type_name = "<< av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType)<<"\n";
+					std::cout << "\nDecoder " << pDecoder->name << " does support device type" << "av_hwdevice_get_type_name = " << av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType) << "\n" << std::endl;
 					return false;
 				}
-				if (pConfig->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-					pConfig->device_type == m_infoStream.nHDType) {
+
+				// 檢查當前硬件配置是否支持通過硬件設備上下文（HW_DEVICE_CTX）的方式進行硬件加速。  
+				// AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX 是一個常量，表示硬件設備上下文方法。
+				// 如果 硬件類型為 AV_HWDEVICE_TYPE_CUDA (NVIDIA CUDA)   m_infoStream.nHDType = kHWDeviceTypeCUDA
+				//if (pConfig->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX && pConfig->device_type == m_infoStream.nHDType)
+  
+				if (pConfig->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX && pConfig->device_type == m_infoStream.nHDType) {
+
 					nPixeFmt = pConfig->pix_fmt;
 
-					fprintf(stderr, "Decoder %s does support device type %s.\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));  //打印解码器类型
+					fprintf(stderr, "Decoder %s does support device type %s.\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)pConfig->device_type));  //打印解码器类型
 					av_log(NULL, AV_LOG_INFO, "Decoder %s does support device type %s.\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
 					break;
 				}
 			}
 			catch (...)
 			{
-				fprintf(stderr, "hw_decoder_init fail %s \n", av_get_media_type_string(nMediaType));
-				av_log(NULL, AV_LOG_INFO, "hw_decoder_init fail %s \n", av_get_media_type_string(nMediaType));
+				fprintf(stderr, "get AVCodecHWConfig fail %s \n", av_get_media_type_string(avMediaType));
+				av_log(NULL, AV_LOG_INFO, "HardWare Initialize : hw_decoder_init fail %s \n", av_get_media_type_string(avMediaType));
 			}
 		}
 	}
+	 
+
 	/* Allocate a codec context for the decoder */
 	*pDecoderCtx = avcodec_alloc_context3(pDecoder);
 	if (!*pDecoderCtx)
 	{
-		fprintf(stderr, "Failed to allocate the %s codec context\n",
-			av_get_media_type_string(nMediaType));
+		fprintf(stderr, "Failed to allocate the %s codec context\n",av_get_media_type_string(avMediaType));
 		return false;
 	}
 
@@ -344,59 +398,70 @@ bool RtspStreamHandle::open_codec_context(int& nStreamIndex, AVCodecContext** pD
 	pStream = m_pInputAVFormatCtx->streams[nStreamIndex];
 	if ((stream_index = avcodec_parameters_to_context(*pDecoderCtx, pStream->codecpar)) < 0)
 	{
-		fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n", av_get_media_type_string(nMediaType));
+		fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n", av_get_media_type_string(avMediaType));
 		return false;
 	}
+
+	// VIDEO ------------------------------------------------------------------------------------------------------------------------ 
 	// init the hard device decoder
-	if (AVMEDIA_TYPE_VIDEO == nMediaType && nPixeFmt != AV_PIX_FMT_NONE)
-	{
-		//沒有音頻的情況出現嚴重錯誤
+	if (AVMEDIA_TYPE_VIDEO == avMediaType && nPixeFmt != AV_PIX_FMT_NONE)
+	{ 
 		try {
 			(*pDecoderCtx)->get_format = get_hw_format;
 			(*pDecoderCtx)->pix_fmt = nPixeFmt;
 			hw_decoder_init(*pDecoderCtx, (AVHWDeviceType)m_infoStream.nHDType);
-			fprintf(stderr, "hw_decoder_init success %s \n", av_get_media_type_string(nMediaType));
-			av_log(NULL, AV_LOG_INFO, "hw_decoder_init success %s \n", av_get_media_type_string(nMediaType));
+			//hw_decoder_init(*pDecoderCtx, (AVHWDeviceType)kHWDeviceTypeCUDA); //原版本來自 m_infoStream.nHDType 現在硬性規定只有一種硬件解碼 CUDA
+
+			fprintf(stderr, "HardWare Initialize : hw_decoder_init success %s \n", av_get_media_type_string(avMediaType));
+			av_log(NULL, AV_LOG_INFO, "HardWare Initialize : hw_decoder_init success %s \n", av_get_media_type_string(avMediaType));
 		}
 		catch (...)
 		{
-			fprintf(stderr, "hw_decoder_init fail!!! %s \n", av_get_media_type_string(nMediaType));
-			av_log(NULL, AV_LOG_INFO, "hw_decoder_init success %s \n", av_get_media_type_string(nMediaType));
-		} 
+			fprintf(stderr, "HardWare Initialize : hw_decoder_init fail!!! %s \n", av_get_media_type_string(avMediaType));
+			av_log(NULL, AV_LOG_INFO, "hw_decoder_init success %s \n", av_get_media_type_string(avMediaType));
+		}
 	}
 	else {
-		fprintf(stderr, "init the hard device decoder fail!! : %s \n", av_get_media_type_string(nMediaType));
+		fprintf(stderr, "init the hard device decoder fail!! : %s \n", av_get_media_type_string(avMediaType));
 	}
 
+
+	// AUDIO ------------------------------------------------------------------------------------------------------------------------
 	//初始化音频 的硬件解码 以下的没法测试 ,补充于2023年1月28日
-	if (AVMEDIA_TYPE_AUDIO == nMediaType && nPixeFmt != AV_PIX_FMT_NONE && m_infoStream.nAudioIndex != -1)
+	if (AVMEDIA_TYPE_AUDIO == avMediaType && nPixeFmt != AV_PIX_FMT_NONE && nStreamIndex != -1)
 	{
 		try {
 			(*pDecoderCtx)->get_format = get_hw_format;
 			(*pDecoderCtx)->pix_fmt = nPixeFmt;
-			hw_decoder_init(*pDecoderCtx, (AVHWDeviceType)m_infoStream.nHDType); //HWDeviceType
+			hw_decoder_init(*pDecoderCtx, (AVHWDeviceType)kHWDeviceTypeCUDA); //原版本來自 m_infoStream.nHDType 現在硬性規定只有一種硬件解碼 CUDA
 		}
 		catch (...)
 		{
-			fprintf(stderr, "audio decode hw_decoder_init fail!!! %s \n", av_get_media_type_string(nMediaType));
-			av_log(NULL, AV_LOG_INFO, "audio decode hw_decoder_init fail %s \n", av_get_media_type_string(nMediaType));
+			fprintf(stderr, "HardWare Initialize : audio decode hw_decoder_init fail!!! %s \n", av_get_media_type_string(avMediaType));
+			av_log(NULL, AV_LOG_INFO, "HardWare Initialize : audio decode hw_decoder_init fail %s \n", av_get_media_type_string(avMediaType));
 		}
 	}
 	else {
-		fprintf(stderr, "No AVMEDIA_TYPE_AUDIO (line 351): %s \n", av_get_media_type_string(nMediaType));
+#ifdef DEBUG
+		fprintf(stderr, "No AVMEDIA_TYPE_AUDIO (line 351): %s \n", av_get_media_type_string(avMediaType));
+#endif
 	}
 
-	/* Init the decoders, with or without reference counting */
+	/* 
+	* Init the decoders, with or without reference counting
+	* 重新計算幀的數量 
+	*/
 	av_dict_set(&pOptions, "refcounted_frames", m_infoStream.nRefCount ? "1" : "0", 0);
 	if ((stream_index = avcodec_open2(*pDecoderCtx, pDecoder, &pOptions)) < 0)
 	{
 		fprintf(stderr, "Failed to open %s codec\n",
-			av_get_media_type_string(nMediaType));
+			av_get_media_type_string(avMediaType));
 		return false;
 	}
+	
 	return true;
 }
-
+ 
 void RtspStreamHandle::close_input_stream()
 {
 	if (m_pInputAVFormatCtx)
@@ -517,7 +582,8 @@ bool RtspStreamHandle::open_output_hls_stream(AVFormatContext*& pFormatCtx, int 
 	 
 	if (nullptr == pFormatCtx)
 	{
-		LOG(WARNING) << "[hls] RtspStramHandle::avformat_alloc_output_context2:" << strOutputPath;
+		//LOG(WARNING) << "[hls] RtspStramHandle::avformat_alloc_output_context2:" << strOutputPath;
+		std::cout << "[hls] RtspStramHandle::avformat_alloc_output_context2:" << strOutputPath << std::endl;
 		printf("Can't alloc hls output context %s\n", strOutputPath.c_str());
 		return false;
 	}
@@ -542,7 +608,8 @@ bool RtspStreamHandle::open_output_hls_stream(AVFormatContext*& pFormatCtx, int 
 			std::string strError = "[func::open_output_hls_stream] Can't copy context, url: " + m_infoStream.strInput + ",errcode:"
 				+ std::to_string(nCode) + ",err msg:" + get_error_msg(nCode);
 			printf("%s \n", strError.c_str());
-			LOG(ERROR) << strError;
+			//LOG(ERROR) << strError;
+			std::cout << strError << std::endl;
 			return false;
 		}
 		// 标记不需要重新编解码
@@ -575,9 +642,7 @@ bool RtspStreamHandle::open_output_hls_stream(AVFormatContext*& pFormatCtx, int 
 		av_opt_set(pFormatCtx->priv_data, "hls_time", "6", AV_OPT_SEARCH_CHILDREN);        //默认2seconds 
 		av_opt_set(pFormatCtx->priv_data, "hls_flags", "0", AV_OPT_SEARCH_CHILDREN);
 		//---------------------------------------------------------------------------------- 
-#ifdef DEBUG
-		LOG(INFO) << "StreamDecodeType::HLS and av_opt_set params hls_list_size = 8 hls_time = 6's \n" << strOutputPath;
-#endif // DEBUG
+ 
 	}
 	//写文件头
 	nCode = avformat_write_header(pFormatCtx, NULL);
@@ -646,6 +711,8 @@ void RtspStreamHandle::close_output_stream()
 
 void RtspStreamHandle::do_decode()
 {
+	AVDictionary* pOption = NULL; //處理網絡重連
+
 	int64_t nFrame = 0;
 	AVPacket packet;
 	int64_t nLastSaveVideo = Time::GetMilliTimestamp();
@@ -653,20 +720,39 @@ void RtspStreamHandle::do_decode()
 
 	//开始录像时间
 	start_time = av_gettime();
-	LOG(INFO) << "\ninitializing cameraId=" << m_infoStream.nCameraId << " start_time=" << start_time << "\n" << std::endl;
+
+	std::chrono::system_clock::time_point curr_sys_clock = std::chrono::system_clock::now();
+	time_t start_time_t = std::chrono::system_clock::to_time_t(curr_sys_clock);
+	std::tm* start_time_local_tm = std::localtime(&start_time_t);
+	  
+	//LOG(INFO) << "\ninitializing cameraId=" << m_infoStream.nCameraId << " start_time=" << start_time << "\n" << std::endl;
+	std::cout << "\nInitializing cameraId=" << m_infoStream.nCameraId << " start time=" << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
+
 	cameraConnectingStatus = CameraConnectingStatus::InPlaying; //改变 状态为Inplaying
 	while (!m_bExit)
 	{
-		int nCode = 0;
-		if (nCode = av_read_frame(m_pInputAVFormatCtx, &packet), nCode < 0)
+		int nCode = av_read_frame(m_pInputAVFormatCtx, &packet);
+		if (nCode < 0)
 		{
-			LOG(ERROR) << "Read frame failed," << get_error_msg(nCode).c_str();
-
+			//LOG(ERROR) << "Read frame failed," << get_error_msg(nCode).c_str();
+			std::cout << "Read frame failed," << get_error_msg(nCode).c_str() << std::endl;
+			 
 			//读帧失败，改变当前连接状态为 InDisConnencted（断开状态中）
 			cameraConnectingStatus = CameraConnectingStatus::InDisConnencted;
 
-			break; //中断读取帧 禁止不循环下去改为continue 重新拉流
+#pragma region NetWork Reconnecting 处理网络中断重连 网络中断，尝试重连
+			// 处理网络中断重连 
+			// 网络中断，尝试重连
+			std::cout << "\nCameraId=" << m_infoStream .nCameraId << "CAMERA DISCONNECTED, NETWORK RECONNECTING......\n" << std::endl; 
+			av_log(NULL, AV_LOG_ERROR, "\nCameraId=%d CAMERA DISCONNECTED, NETWORK RECONNECTING......\n", m_infoStream.nCameraId);
+
+			av_dict_set(&pOption, "http_proxy", m_infoStream.strInput.c_str(), 0);
+			avformat_open_input(&m_pInputAVFormatCtx, m_infoStream.strInput.c_str(), NULL, &pOption);
+#pragma endregion
+			//使用上面的網絡重連,註釋掉break,使鏡頭一直處於重連操作
+			//break; //中断读取帧 
 		}
+		 
 		bool bSucc = false;
 		if (m_infoStream.nVideoIndex == packet.stream_index)
 			bSucc = decode_video_packet(&packet);
@@ -926,7 +1012,8 @@ void RtspStreamHandle::av_packet_rescale_ts(AVPacket* pkt, AVRational src_tb, AV
 {
 	if (pkt->duration < 0)
 	{
-		LOG(INFO) << "if (pkt->duration < 0) ：pktFrame->duration =" << pkt->duration << " pktFrame->pts=" << pkt->pts << " pktFrame->dts=" << pkt->dts;
+		//LOG(INFO) << "if (pkt->duration < 0) ：pktFrame->duration =" << pkt->duration << " pktFrame->pts=" << pkt->pts << " pktFrame->dts=" << pkt->dts;
+		std::cout << "if (pkt->duration < 0) ：pktFrame->duration =" << pkt->duration << " pktFrame->pts=" << pkt->pts << " pktFrame->dts=" << pkt->dts << std::endl;
 	}
 
 	if (pkt->pts != AV_NOPTS_VALUE)
@@ -959,8 +1046,10 @@ void RtspStreamHandle::release_output_format_context(AVFormatContext*& pFmtConte
 		av_write_trailer(pFmtContext);
 
 		start_time = av_gettime(); //重新记录一个新的开始时间
-
-		LOG(INFO) << "Finished file " << m_infoStream.mediaFormate << " - " << m_path_filename << ",if again then record start_time =" << start_time << "\n";
+		std::chrono::system_clock::time_point curr_sys_clock = std::chrono::system_clock::now();
+		time_t start_time_t = std::chrono::system_clock::to_time_t(curr_sys_clock); 
+		std::tm* start_time_local_tm = std::localtime(&start_time_t); 
+		std::cout << "Finished File " << m_infoStream.mediaFormate << " - " << m_path_filename << "\nIf again then record start time : " << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
 
 		if (!(pFmtContext->oformat->flags & AVFMT_NOFILE))
 		{
@@ -1096,20 +1185,18 @@ void RtspStreamHandle::addnew_record_file_info(StreamInfo& streamInfo, int64_t& 
 	cameraMpegInfo.CameraId = streamInfo.nCameraId;
 	cameraMpegInfo.IsGroup = false;
 
-	int iCreateTime, iModifyTime, iAccessTime, iFileLen;
+	int iCreateTime,iFileLen;
 	cameraMpegInfo.FileSize = 0;
  
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-	if (true == File::get_file_info(m_path_filename, iCreateTime, iModifyTime, iAccessTime, iFileLen))
-	{
-		//TEST
-		//LOG(INFO) << "m_path_filename file size (bytes):" << iFileLen << " m_path_filename = " << m_path_filename << endl;
+	if (true == File::get_file_info(m_path_filename, iCreateTime, iFileLen))
+	{ 
 		cameraMpegInfo.FileSize = iFileLen;
 	}
 	else
-	{
-		LOG(ERROR) << "RtspStramHandle::get_file_info : no file here:" << m_path_filename;
+	{ 
+		std::cout << "RtspStramHandle::get_file_info : no file here:" << m_path_filename << std::endl;
 	}
 
 	cameraMpegInfo.FileFormat = streamInfo.mediaFormate == 0 ? "MP4" : "FLV";

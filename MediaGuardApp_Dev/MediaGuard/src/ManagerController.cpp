@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+ 
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -13,7 +13,7 @@
 #include "httpserver/httpserver.h"
 
 
-using namespace Stream;
+using namespace Stream; 
 
 GlobalSetting g_GlobalSetting; //全局配置
 // std::atomic需使用默认构造初始化, 不然有的编译器会因不支持拷贝构造导致编译不通过
@@ -87,16 +87,19 @@ void run()
 
 void clean_picture_run()
 {
+	int clean_picture_circle_mins = 3; //每3分鐘運行一次
+#ifdef  DEBUG
+		clean_picture_circle_mins = 1; //測試使用 1分鐘循環清理圖片
+#endif //  DEBUG
+
 	while (!g_bExit.load())
 	{
 		ManagerController::clean_picture(g_GlobalSetting.picRemainMinutes);
 		SHARED_LOCK(g_mtLock);
-		g_cvCond.wait_for(locker, std::chrono::milliseconds(20000), []() {  //20's
-			auto isExit = g_bExit.load();
-			//TEST
-			//std::cout << Time::GetCurrentSystemTime() << "  g_bExit.load():" << isExit << std::endl;
+		g_cvCond.wait_for(locker, std::chrono::minutes(clean_picture_circle_mins), []() {  
+			auto isExit = g_bExit.load(); 
 			return isExit;
-			});
+		});
 	}
 }
 
@@ -136,7 +139,7 @@ void ManagerController::Init()
 
 		}
 
-		// for clean hls index.m3u8 cache ts files 
+		// for clean hls index.m3u8 cache ts files 作废 不需要使用这个函数 已经在传入字典中定义清理碎片
 		//m_thread_hls_clear = std::thread(std::bind(&ManagerController::clean_hls_ts_run, this));
 	}
 }
@@ -180,24 +183,21 @@ void ManagerController::run_media_list()
 
 	// hard device accelate
 	//是否使用硬件加速，需要已知機器配置
-	//infoStream.nHDType = Stream::kHWDeviceTypeNone;
+	//infoStream.nHDType = Stream::kHWDeviceTypeNone; 此傳入參數作廢 改用程式判斷是否有顯卡
 	infoStream.nHDType = Stream::kHWDeviceTypeCUDA;
 	//infoStream.nHDType = Stream::kHWDeviceTypeDXVA2;
 
-	//RTSP方式 RTSP模式录像:  
-	//LOG(INFO) << "input url :" << rtsp_url;
+	//RTSP方式 RTSP模式录像:   
 	int golPicRemainMinutes = 2;
 	StreamMangement hStream(Stream::kStreamTypeRtsp);
-	//StreamMangement hStream(Stream::kStreamTypeUsb);
-	//StreamMangement hStream(Stream::kStreamTypeUsb); 
-	hStream.ListDshowDevice();  //FOR USB CAM
-
+	  
 	infoStream.nStreamDecodeType = (int)StreamDecodeType::HLS; //输出hls
 	hStream.StartDecode(infoStream);
 
 	ManagerController::signal_check_main(); //判断ctrl+c ctrl+b 提示exit 退出
 
-	LOG(INFO) << "It'll exit in few seconds normally!";
+	//LOG(INFO) << "It'll exit in few seconds normally!"; 
+	std::cout << "It'll exit in few seconds normally!" << std::endl;
 
 	//任意键退出 前需要关闭其他线程  多个rtsp handle单元则for list退出
 	hStream.StopDecode();
@@ -217,7 +217,8 @@ void ManagerController::run_media_batch_list()
 	std::cout << "\nDEVICE_CONFIG::DEVICE SERIAL NUMBER : " << DEVICE_CONFIG.cfgDevice.device_serial_no << " | " << " Storage Limited bytes : " << to_string(DEVICE_CONFIG.cfgGlobalSetting.storageLimitedbytes) << "\n" << std::endl;
 	if (DEVICE_CONFIG.cfgDevice.device_serial_no.length() == 0)
 	{
-		LOG(INFO) << "device.json uft8 unformat!!!(uft8 without bom) [System Pause]" << std::endl;;
+		//LOG(INFO) << "device.json uft8 unformat!!!(uft8 without bom) [System Pause]" << std::endl;;
+		std::cout << "device.json uft8 unformat!!!(uft8 without bom) [System Pause]" << std::endl;;
 		system("pause");
 		return;
 	}
@@ -230,14 +231,16 @@ void ManagerController::run_media_batch_list()
 		int nCode = cameraMpeg.camera_list(sList);
 		if (nCode != CP_OK)
 		{
-			LOG(INFO) << "func::cameraMpeg.camera_list -> GET CAMERA LIST FROM CLOUD FAIL!!!";
+			//LOG(INFO) << "func::cameraMpeg.camera_list -> GET CAMERA LIST FROM CLOUD FAIL!!!";
+			std::cout << "func::cameraMpeg.camera_list -> GET CAMERA LIST FROM CLOUD FAIL!!!" << std::endl;
 		}
 		else
 			get_list_succ = false;
 
 		if (i > 10)  //最多10次嘗試
 		{
-			LOG(INFO) << "func::cameraMpeg.camera_list -> TRY TO GET MORE THAN 10 Times, FAIL!!!";
+			//LOG(INFO) << "func::cameraMpeg.camera_list -> TRY TO GET MORE THAN 10 Times, FAIL!!!";
+			std::cout <<  "func::cameraMpeg.camera_list -> TRY TO GET MORE THAN 10 Times, FAIL!!!" << std::endl;
 			break;
 		}
 	}
@@ -246,7 +249,8 @@ void ManagerController::run_media_batch_list()
 	bool ret_trans = cameraMpeg.camera_list_trans_to_strean_info(sList, listx);
 	if (!ret_trans)
 	{
-		LOG(INFO) << "func::cameraMpeg.camera_list_trans_to_strean_info -> TRANS TO STREAM INFO FAIL!!!";
+		//LOG(INFO) << "func::cameraMpeg.camera_list_trans_to_strean_info -> TRANS TO STREAM INFO FAIL!!!";
+		std::cout << "func::cameraMpeg.camera_list_trans_to_strean_info -> TRANS TO STREAM INFO FAIL!!!" << std::endl;
 	}
 
 	Service::StreamInList::iterator itr;
@@ -276,7 +280,7 @@ void ManagerController::run_media_batch_list()
 		streamInfo.bRtmp = false;  //不開啟rtmp,
 
 		std::shared_ptr<StreamMangement>  m_StreamPtrHandle = std::make_shared<StreamMangement>(Stream::kStreamTypeRtsp);
-		m_StreamPtrHandle->ListDshowDevice();
+		
 		bool isStart = m_StreamPtrHandle->StartDecode(streamInfo);
 
 		if (isStart)
@@ -288,7 +292,8 @@ void ManagerController::run_media_batch_list()
 	//輸入exit則退出
 	ManagerController::signal_check_main(); //判断ctrl+c ctrl+b 提示exit 退出
 
-	LOG(INFO) << "It'll exit in few seconds normally!";
+	//LOG(INFO) << "It'll exit in few seconds normally!";
+	std::cout << "It'll exit in few seconds normally!" << std::endl;
 
 	//任意键退出 前需要关闭其他线程  多个rtsp handle单元则for list退出
 
@@ -296,12 +301,13 @@ void ManagerController::run_media_batch_list()
 	{
 		(*itr_mgt)->StopDecode();  //auto x = (std::shared_ptr<StreamMangement>)(*itr_mgt);
 
-		LOG(INFO) << "CameraId=" << (*itr_mgt)->m_infoStream.nCameraId << " PLEASE WAIT TO STOP IN TEN SECONDS, " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
-
+		//LOG(INFO) << "CameraId = " << (*itr_mgt)->m_infoStream.nCameraId << " PLEASE WAIT TO STOP IN TEN SECONDS, " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
+		std::cout << "CameraId = " << (*itr_mgt)->m_infoStream.nCameraId << " PLEASE WAIT TO STOP IN TEN SECONDS, " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
 		//例如 全局圖片List需要時間去處理。 關閉時間不足，導致圖片識別業務線程池未處理完畢導致變量關閉無法讀取
 		std::this_thread::sleep_for(std::chrono::milliseconds(9000)); 
 
-		LOG(INFO) << "CameraId=" << (*itr_mgt)->m_infoStream.nCameraId << " COMPLETED TO STOP CAMERA ID = " << (*itr_mgt)->m_infoStream.nCameraId << " CAMERA IP " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
+		//LOG(INFO) << "CameraId = " << (*itr_mgt)->m_infoStream.nCameraId << " COMPLETED TO STOP CAMERA ID = " << (*itr_mgt)->m_infoStream.nCameraId << " CAMERA IP " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
+		std::cout << "CameraId = " << (*itr_mgt)->m_infoStream.nCameraId << " COMPLETED TO STOP CAMERA ID = " << (*itr_mgt)->m_infoStream.nCameraId << " CAMERA IP " << (*itr_mgt)->m_infoStream.rtspIp << std::endl;
 
 	}
 	
@@ -334,10 +340,16 @@ void ManagerController::Uninit()
 */
 void ManagerController::clean_picture(int64_t picRemainMinutes)
 {
-	const fs::path picture_path = fs::current_path().append("picture"); //ManagerController::current_working_directory();
-	//TEST  clean_picture
-	//LOG(INFO) << "[TEST] [func::clean_picture] picture_path:" << picture_path << "\n";
+	//限制最大值6分鐘 兩個鏡頭 15分鐘 1500張圖片,數量太大,影響性能 
+	if (picRemainMinutes > 6)
+		picRemainMinutes = 6;
 
+	//如果0分鐘 則 使用內存保存,這裡不執行
+	if (picRemainMinutes == 0)
+		return;
+
+	const fs::path picture_path = fs::current_path().append("picture"); //ManagerController::current_working_directory();
+  
 	//tu-tu said:
 	//c++17 跨平台 std::fs::current_path() 
 	//如果编译器支持C++17，则建议使用std::filesystem::current_path
@@ -349,42 +361,62 @@ void ManagerController::clean_picture(int64_t picRemainMinutes)
 	std::vector<std::string> vecFile;
 	File::GetFilesOfDir(picture_path.string(), vecFile);
 
-	//TEST 清理过时图片，测试完毕 注释掉
-	//LOG(INFO) << "[FUNC::clean_picture] picRemainMinutes:" << picRemainMinutes << " vecFiles =" << vecFile.size()<<"\n";
+	std::cout << "\n[Folder Picture :" << picture_path.string() << "] [Total Files :" << vecFile.size() <<"}\n" << std::endl;
 
-	for (size_t i = 0; i < vecFile.size(); i++) {
-		  
-		int iCreateTime, iModifyTime, iAccessTime, iFileLen;
+	//文件夾存在文件的情況下判斷是否大於設置的15分鐘
+	if (vecFile.size() > 0)
+	{
+		for (size_t i = 0; i < vecFile.size(); i++) {
 
-		const std::string picutre_path_filename = vecFile[i].c_str();
+			const std::string picutre_path_filename = vecFile[i].c_str();
 
-		if (true == File::get_file_info(vecFile[i].c_str(), iCreateTime, iModifyTime, iAccessTime, iFileLen))
-		{
-			//获取多少分钟前的时间
-			std::chrono::system_clock::time_point curr = std::chrono::system_clock::now();
-			std::chrono::system_clock::time_point before_minutes_time = curr - std::chrono::minutes(picRemainMinutes);
-			auto longremaintime = std::chrono::duration_cast<std::chrono::microseconds>(before_minutes_time.time_since_epoch());
-			int64_t longCreateTime = static_cast<int64_t>(iCreateTime);
-			if (longCreateTime < longremaintime.count())
-			{ 
-				try {
+			if (fs::exists(picutre_path_filename))
+			{
+				// 獲取文件的最後寫入時間 std::filesystem::file_time_type
+				auto ftime = fs::last_write_time(picutre_path_filename); // ftime 是 file_time_type 的一個實例
+				// 將 file_time_type 轉換為 system_clock::time_point
+				auto sctp = ManagerController::to_time_t(ftime); // 使用 clock 來獲取 time_t
 
-					 fs::path picture_path_file(picutre_path_filename);
-					 File::deleteFile(picutre_path_filename);
-  
-					 //LOG(INFO) << "func::clean_picture DeleteFile:" << picture_path_file.string();
-					   
+				//當前的时间
+				auto curr = std::chrono::system_clock::now();
+
+				//device.json -> picRemainMinutes (15分鐘)前的時間
+				auto before_minutes = curr - std::chrono::minutes(picRemainMinutes); //
+
+				auto before_minutes_t = std::chrono::system_clock::to_time_t(before_minutes);
+
+				if (sctp < before_minutes_t)
+				{
+					try {
+
+						fs::path picture_path_file(picutre_path_filename);
+						File::deleteFile(picutre_path_filename);
+					}
+					catch (...) {
+						std::cout << Time::GetCurrentSystemTime() << " " << picutre_path_filename << " [EXCEPTION] DELETED FAIL" << std::endl;
+					}
 				}
-				catch (...) {
-					std::cout << Time::GetCurrentSystemTime() << picutre_path_filename << "[EXCEPTION] DELETED FAIL" << std::endl;
+				//测试完毕注释掉2023-3-16
+				else {
+#ifdef DEBUG
+					std::cout << "[Delete Picture] " << picutre_path_filename << "/t"
+						<< Time::GetCurrentSystemTime() << "[file not in "
+						<< picRemainMinutes << " minutes ago] file last modified (ftime):"
+						<< std::ctime(&sctp);
+#endif 
 				}
-			}
-			//测试完毕注释掉2023-3-16
-			else {
-				LOG(INFO) <<"[delete picture] " << picutre_path_filename << "/t" << Time::GetCurrentSystemTime() << "[file not in " << picRemainMinutes << " minutes ago]" << " file create:" << longCreateTime << "-" << iCreateTime << " | " << longremaintime.count();
 			}
 		}
-	}
+	} 
+}
+
+template <typename TP>
+std::time_t ManagerController::to_time_t(TP tp)
+{
+	using namespace std::chrono;
+	auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now()
+		+ system_clock::now());
+	return system_clock::to_time_t(sctp);
 }
 
 /*
@@ -400,7 +432,8 @@ void ManagerController::clean_video_store()
 	 
 	if (!fs::is_directory(video_path))
 	{
-		LOG(INFO) << "NO SUCH DIRECTORY [VIDEO] " << video_path << "\n" << std::endl;
+		//LOG(INFO) << "NO SUCH DIRECTORY [VIDEO] " << video_path << "\n" << std::endl;
+		std::cout << "NO SUCH DIRECTORY [VIDEO] " << video_path << "\n" << std::endl;
 		return;
 	}
 
@@ -426,8 +459,8 @@ void ManagerController::clean_video_store()
 			{
 				if (storage_capacity > g_GlobalSetting.storageLimitedbytes)
 				{ 
-					int iCreateTime, iModifyTime, iAccessTime, iFileLen;
-					if (true ==File:: get_file_info(vector_date_file[j].c_str(), iCreateTime, iModifyTime, iAccessTime, iFileLen))
+					int iCreateTime, iFileLen;
+					if (true ==File:: get_file_info(vector_date_file[j].c_str(), iCreateTime, iFileLen))
 					{
 						//规则保留最少15分钟的文件
 						//获取多少分钟前的时间
@@ -444,8 +477,7 @@ void ManagerController::clean_video_store()
 						//删除后再次检查是否满足限制容量的要求，如果满足则退出删除检查循环
 						storage_capacity = get_filesize(video_path.string());
 						if (storage_capacity < g_GlobalSetting.storageLimitedbytes)
-						{
-							//LOG(INFO) << storage_capacity << g_GlobalSetting.storageLimitedbytes << " " << video_folder << std::endl;
+						{ 
 							break;
 						}
 					}
@@ -454,9 +486,7 @@ void ManagerController::clean_video_store()
 					}
 				}
 				storage_capacity = get_filesize(video_path.string());
-
-				//TEST
-				//LOG(INFO) << "video folders compacity limited storage_capacity =" << storage_capacity << " vector_date_file count =" << vector_date_file.size() << std::endl;
+				 
 			}
 		}
   
@@ -582,18 +612,20 @@ int64_t ManagerController::get_filesize(string path)//递归核心代码
 #endif
 }
 
-
+/* 
+* 防止誤操作導致程序中斷 ctrl+c 無效
+*/
 void ManagerController::valid_op(int n)
 {
 	if (n == SIGINT)
 	{
-		std::cout << "\n按下 ctrl+c 無效！請輸入 exit" << std::endl;
+		std::cout << "\n按下 ctrl+c 無效！請輸入 exit\nPressing ctrl+c has no effect! Please enter exit\n" << std::endl;
 		signal(SIGINT, valid_op);
 		main_exit = false;
 	}
 	if (n == SIGABRT)
 	{
-		std::cout << "\nSIGABRT：因中止呼叫而觸發的異常終止\n";
+		std::cout << "\nSIGABRT：因中止呼叫而觸發的異常終止\nSIGABRT: Abnormal termination triggered by abort call\n";
 		main_exit = false;
 	}
 }
@@ -612,20 +644,21 @@ void ManagerController::signal_check_main()
 			transform(input.begin(), input.end(), input.begin(), ::tolower);
 		}
 		else {
-			std::cout << "\nInput exit again to treminate!\n\n" << std::endl;
+			std::cout << "\nInput exit to treminate!\n\n" << std::endl;
 		}
  
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		if (std::cin.fail())
 		{
-			std::cout << "\nInput exit again to treminate!\n" << std::endl;
+			std::cout << "\nInput exit to treminate!\n" << std::endl;
 			std::cin.clear();
 			std::cin.sync();
 		}
 		if (input == "exit")
 		{
-			LOG(INFO) << "\nnow will be exit as you input = " << input << "\n";
+			//LOG(INFO) << "\nnow will be exit as you input = " << input << "\n";
+			std::cout << "\nnow will be exit as you input = " << input << "\n";
 			main_exit = true;
 			break;
 		}
@@ -645,14 +678,17 @@ void ManagerController::signal_check_main()
 void ManagerController::main_initialize()
 {
 #ifdef _WIN32
-	SetConsoleTitle("\nMedia Guard Ver3.0 ");
+	SetConsoleTitle("\nMedia Guard Ver3.1 ");
 #elif __linux__
-	std::cout << "\nMedia Guard Ver3.0 \n\n\n" << std::endl;
+	std::cout << "\nMedia Guard Ver3.1 \n\n\n" << std::endl;
   
 #endif
 
+	//clear screen
+	ManagerController::clearScreen();
+
 	std::string main_root = current_working_directory();
-	std::cout << "\n\tCurrent working directory:" << main_root << "\n" << std::endl;
+	std::cout << "\n\nCurrent working directory:" << main_root << "\n\n" << std::endl;
 
 	ManagerController::create_main_media_folder();
 }
@@ -687,3 +723,19 @@ void ManagerController::create_main_media_folder()
 		File::CreateSingleDirectory(hls_path.string());
 }
 
+/* 
+* 清理主控屏幕
+*/
+void ManagerController::clearScreen() {
+
+#ifdef _WIN32
+	// Windows 平台
+	system("cls");
+#elif __linux__
+	// Linux 平台
+	system("clear");
+#else
+	std::cout << "\n\n清屏功能不支援此平台。\nThe clear screen function is not supported on this platform\n\n" << std::endl;
+#endif
+}
+ 
