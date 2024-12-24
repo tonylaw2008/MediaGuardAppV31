@@ -14,8 +14,11 @@
 #include <signal.h>
 #include "StreamManager.h"
 
+#include "Common.h"
+
 #include <chrono>
 #include <filesystem>
+
 
 class ManagerController
 {

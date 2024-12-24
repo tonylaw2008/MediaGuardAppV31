@@ -81,8 +81,11 @@ bool StreamMangement::StartDecode(const StreamInfo& infoStream)
 	*/
 	//獲取識別任務列表 
 	CAR_PLATE_RECOGNITION_ENABLE = GetTaskInfoIfHave(m_infoStream.nCameraId, TaskType::CAR_PLATE_RECOGNITION, cameraTaskInfo_for_CAR_PLATE_RECOGNITION);
-	//LOG(INFO) << "func::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
-	std::cout << "func::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
+
+#ifdef DEBUG
+	std::cout << "FUNC::CAR_PLATE_RECOGNITION_ENABLE=" << CAR_PLATE_RECOGNITION_ENABLE << std::endl;
+#endif
+
 	//-------------------------------------------------------------------------------------------------------------------------------------------------
 	bool bIsStart = m_pHandle->StartDecode(infoStream);
 

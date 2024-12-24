@@ -454,11 +454,16 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 						JS_PARSE_OPTION(streamInfo.nCameraId, a[i], Int, cameraId);
 						JS_PARSE_OPTION(streamInfo.strInput, a[i], String, rtsp);
 
+						//鏡頭狀態 0:停用;  1:啟用
+						int camera_state = 1;
+						JS_PARSE_OPTION(camera_state, a[i], Int, state);
+						streamInfo.cameraStatus = camera_state == 1;
+						 
 						//获取镜头设置 雲端或者本地
-						Service::CamSettingNSchedule cam_set;
+						Service::CamSettingNSchedule cam_setting;
 						auto stream_camera_id = std::to_string(streamInfo.nCameraId);
-						bool get_cam_succ = setting_n_schedule_by_camera_id(stream_camera_id, token1, cam_set);
-						if (get_cam_succ == false) {
+						bool get_cam_setting_succ = setting_n_schedule_by_camera_id(stream_camera_id, token1, cam_setting);
+						if (get_cam_setting_succ == false) {
 							try {
 								//LOG(ERROR) << "GET CAMER CAMERA SCHEDULE CONFIG JSON TO OBJ FAIL (func::camera_list<setting_n_schedule_by_camera_id).camera id = " << std::to_string(streamInfo.nCameraId);
 								std::cout << "GET CAMER CAMERA SCHEDULE CONFIG JSON TO OBJ FAIL (func::camera_list<setting_n_schedule_by_camera_id).camera id = " << std::to_string(streamInfo.nCameraId) << std::endl;
@@ -470,18 +475,18 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 							continue;
 						}
 
-						//No.1
-						std::string strHdType = DEVICE_CONFIG.cfgGlobalSetting.nHDType;
+						//No.1 ★★★★★ 使用什麼硬件類型解碼 從本地設備配置獲得(device.json->nHDType) 
+						std::string strHdType = DEVICE_CONFIG.cfgGlobalSetting.nHDType; 
 						/*device.config 全局设置是字符串形式，下列一一对应到 ENUM : HWDeviceType*/
-						if (strHdType == "kHWDeviceTypeCUDA")  //Navida显卡解码
+						if (strHdType == "kHWDeviceTypeCUDA")  //Navida显卡解码 ★★★★★
 							streamInfo.nHDType = 2;
-						else if (strHdType == "kHWDeviceTypeNone") //没有硬件解码
+						else if (strHdType == "kHWDeviceTypeNone") //没有硬件解码 ★
 							streamInfo.nHDType = 0;
 						else if (strHdType == "kHWDeviceTypeVDPAU")
 							streamInfo.nHDType = 1;
 						else if (strHdType == "kHWDeviceTypeVAAPI")
 							streamInfo.nHDType = 3;
-						else if (strHdType == "kHWDeviceTypeDXVA2")
+						else if (strHdType == "kHWDeviceTypeDXVA2") //INTEL 集成顯卡 ★
 							streamInfo.nHDType = 4;
 						else if (strHdType == "kHWDeviceTypeQSV")
 							streamInfo.nHDType = 5;
@@ -491,22 +496,24 @@ bool CameraMpeg::camera_list(Service::StreamInfoApiList& streamInfoApiList)
 							streamInfo.nHDType = 7;
 						else if (strHdType == "kHWDeviceTypeDRM")
 							streamInfo.nHDType = 8;
-						else if (strHdType == "kHWDeviceTypeOPENCL")
+						else if (strHdType == "kHWDeviceTypeOPENCL") //OPENCL 集成顯卡 ★
 							streamInfo.nHDType = 9;
 						else if (strHdType == "kHWDeviceTypeMEDIACODEC")
 							streamInfo.nHDType = 10;
 
-						streamInfo.rtspIp = cam_set.CameraIp;
-						streamInfo.bSavePic = cam_set.SavePic;					//No.4     // save frame
-						streamInfo.mediaFormate = cam_set.SaveMpeg4 == true ? (int)MediaFormate::MPEG : (int)MediaFormate::FLV;							//No.5  //存储为MPEG=0 
-						streamInfo.savePictRate = cam_set.SavePictRate;			//No.7 //帧率/savePictRate = 保存的频率 每25帧保存5帧
-						streamInfo.bSaveVideo = cam_set.SaveVideo;				//No.8   // save video  
-						streamInfo.nVideoTime = DEVICE_CONFIG.cfgGlobalSetting.recordTimeMinutes;	// static_cast<int64_t>(60 * 1000 * 5); //No.9     //录像时间 time for each video 
-						streamInfo.bRtmp = cam_set.RtmpOutput; //開啟Rtmp
+						streamInfo.rtspIp = cam_setting.CameraIp;
+						streamInfo.bSavePic = cam_setting.SavePic;						//No.4     // 保存圖片到本地硬盤
+						streamInfo.mediaFormate = cam_setting.SaveMpeg4 == true ? (int)MediaFormate::MPEG : (int)MediaFormate::FLV;							
+																						//No.5  //存储为MPEG=0 
+						streamInfo.savePictRate = cam_setting.SavePictRate;				//No.7 //帧率/savePictRate = 保存的频率 每25帧保存5帧
+						streamInfo.bSaveVideo = cam_setting.SaveVideo;					//No.8   // save video  
+						streamInfo.nVideoTime = DEVICE_CONFIG.cfgGlobalSetting.recordTimeMinutes;	
+																						//No.9     //录像时间 time for each video 
+						streamInfo.bRtmp = cam_setting.RtmpOutput;						//No.X	開啟Rtmp
 
-						if (cam_set.HlsOutput)
+						if (cam_setting.HlsOutput)
 							streamInfo.nStreamDecodeType = StreamDecodeType::HLS;	//No.10 bRtmp 改为解码流类型
-						else if (cam_set.RtmpOutput == false)					//目前不启动Rtmp,如果不输出HLS则不输出流
+						else if (cam_setting.RtmpOutput == false)					//目前不启动Rtmp,如果不输出HLS则不输出流
 							streamInfo.nStreamDecodeType = StreamDecodeType::NOSTREAM;
 
 						std::stringstream output_s;	//No.11 HLS 输出流

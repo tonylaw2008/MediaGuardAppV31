@@ -31,6 +31,8 @@ namespace Stream {
 		 
 		const std::string pathFileame = path_filename;
 
+		//如果沒有本地保存圖片則導致出錯 (FATAL :camera_schedule_12.json->savePic =false)
+		//後續這裡需要修改
 		int nCode = clientCurl.UploadFile(para, pathFileame, strRst);
 	 
 		rapidjson::Document doc;

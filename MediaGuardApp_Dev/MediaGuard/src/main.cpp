@@ -13,18 +13,7 @@ using namespace Stream;
 std::thread m_http_server;
 
 int main(int argc, char** argv)
-{ 
-	//--------------------------------------------------------------------------------------
-
-	std::cout << "\n\n\nPRESS ENTER TO START .......\n\n\n"  << std::endl; 
-	char c;
-	std::cin.get(c);
-	std::cout <<  c  << " NOW TO START......" << std::endl;
-	
-	std::cout <<  "Hello The World..................."  << std::endl;
-	//LOG(INFO) << "Console Platform Is Required UTF8 Encoding.";
-	std::cout <<  "Console Platform Is Required UTF8 Encoding." << std::endl;
-
+{  
 	
 	//測試車牌配置節點 test============================================ 
 	/*auto permitedCamList = DEVICE_CONFIG.cfgCarPlateRecogBusiness.PermitedCamList;
@@ -32,8 +21,7 @@ int main(int argc, char** argv)
 	{
 		std::cout << "permitedCamList ..................." << item->CameraId << std::endl;
 	}*/
-
-
+	 
 	//================================================================================================  
 	// 正式開始運行程式
 	//================================================================================================  
@@ -44,7 +32,9 @@ int main(int argc, char** argv)
 	//------------------------------------------------------------------
 	ManagerController managerController;
 
+	//TEST 單個鏡頭
 	//managerController.run_media_list();  //硬數據測試
+	//多鏡頭環境 FOR部署
 	managerController.run_media_batch_list(); //多路camera 啟動處理 
 
 	//任意键退出 前需要关闭其他线程

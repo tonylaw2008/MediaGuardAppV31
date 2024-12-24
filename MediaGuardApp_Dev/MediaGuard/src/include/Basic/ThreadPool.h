@@ -7,10 +7,9 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
-#include "Basic.h"
 
 
-NAMESPACE_BASIC_BEGIN
+
 class ThreadPool
 {
 public:
@@ -25,7 +24,7 @@ public:
     }
 
 public:
-    void Start(unsigned short size = 1, int nMaxThread = 10)
+    void Start(unsigned short size = 1, int nMaxThread = 1)
     {
         m_nMaxThread = nMaxThread;
         add_thread(size);
@@ -41,14 +40,14 @@ public:
                 thread.join(); // 等待任务结束， 前提：线程一定会执行完
         }
     }
-	//https://github.com/lzpong/threadpool  //https://www.cnblogs.com/lzpong/p/6397997.html
+
     // 提交一个任务
     // 调用.get()获取返回值会等待任务执行完,获取返回值
     // 有两种方法可以实现调用类成员，
     // 一种是使用   bind： .commit(std::bind(&Dog::sayHello, &dog));
     // 一种是用 mem_fn： .commit(std::mem_fn(&Dog::sayHello), &dog)
     template<class F, class... Args>
-    auto Commit(F&& f, Args&&... args) ->std::future<decltype(f(args...))>
+    auto Commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))>
     {
         if (m_bStoped.load())    // stop == true ??
             throw std::runtime_error("commit on Threadm_vecPool is stopped.");
@@ -77,7 +76,8 @@ public:
     //空闲线程数量
     int GetAvailableThread() { return m_nThread; }
     //线程数量
-    int GetPoolSize() { return m_vecPool.size(); }
+    size_t GetPoolSize() { return m_vecPool.size(); }
+
 private:
     void add_thread(int size)
     {
@@ -101,7 +101,7 @@ private:
                     task();
                     ++m_nThread;
                 }
-            });
+                });
             ++m_nThread;
         }
     }
@@ -120,7 +120,5 @@ private:
     std::atomic<bool> m_bStoped;
     //空闲线程数量
     std::atomic<int> m_nThread;
-    int m_nMaxThread;
-
+    int m_nMaxThread; 
 };
-NAMESPACE_BASIC_END

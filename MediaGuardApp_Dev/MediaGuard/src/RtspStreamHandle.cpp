@@ -136,6 +136,9 @@ void RtspStreamHandle::GetVideoSize(int& width, int& height)
 	height = m_infoStream.nHeight;
 }
 
+/* 
+* 加入到容器隊列 並根據傳入參數是否保存圖片到本地硬盤
+*/
 void RtspStreamHandle::PushFrame(const cv::Mat& frame)
 {
 	// save per 25 frame 即25幀保存一次圖片 但具體要看傳入的保存圖片頻率  
@@ -143,17 +146,19 @@ void RtspStreamHandle::PushFrame(const cv::Mat& frame)
 	// 保存硬盤 關鍵要判斷傳入的參數 m_infoStream.bSavePic
 	m_nFrame++;
 	if (0 == round(m_nFrame % m_infoStream.savePictRate)) {
+
 		m_nFrame = 0; //重置计数器
+
 		std::string filename = get_filename(FType::kFileTypePicture);
 		//多个线程任务提交到线程池保存磁盘
-		m_poolSavePic.Commit([=]()
-			{ 
-				//如果設置保存圖片到硬盤
-				if (m_infoStream.bSavePic)
-				{
+		//如果設置保存圖片到硬盤
+		if (m_infoStream.bSavePic)
+		{
+			m_poolSavePic.Commit([=]()
+				{ 
 					cv::imwrite(filename, frame);
-				}
-		});
+				});
+		}
 
 		{
 			std::lock_guard<std::mutex> lock(m_mtFrame);
@@ -951,7 +956,7 @@ bool RtspStreamHandle::decode_audio_packet(const AVPacket& packet)
 		//}
 
 		//ref http://cn.voidcc.com/question/p-gjfuvrev-du.html
-#pragma endregion #
+#pragma endregion
 	}
 
 	av_frame_free(&pFrame);

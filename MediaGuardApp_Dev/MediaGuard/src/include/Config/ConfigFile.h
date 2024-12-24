@@ -4,9 +4,8 @@
 *
 ***************************************************************/
 #pragma once
-
-#include "../File.h"
-
+#include <string>
+ 
 namespace Config
 {
  
@@ -15,8 +14,6 @@ namespace Config
 	static std::string kConfigName = "config.json"; //作廢, 這個配置文件改為 device.json
 	static std::string kCameraList = "camera_list.json";
 	 
- 
-
 
 	/************************************************************************
 	*                                   config                              *

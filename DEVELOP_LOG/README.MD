@@ -87,10 +87,36 @@ enum class TaskType
 
 ### <img src="README_IMGs/README/image-20241224135532853.png" alt="image-20241224135532853" style="zoom:80%;" />	
 
- 
+###  車牌號碼識別
+
+```
+//如果沒有本地保存圖片則導致出錯 (FATAL :camera_schedule_12.json->savePic =false)
+//後續這裡需要修改
+int nCode = clientCurl.UploadFile(para, pathFileame, strRst);
+```
+
+<img src="README_IMGs/README/image-20241224185419365.png" alt="image-20241224185419365" style="zoom:80%;" />
+
+1. **後續需要修改為 POST BASE64 包括其他業務功能都是通過內存保留的 圖片隊列的PictInfo.frameBase64.**
+
+**而不是通過保存在硬盤上,這樣導致硬盤容易老化和損壞.**
+
+2. **車牌號碼識別 CAR PLATE OCR RECOGNITION 計劃改為OPENCV 的OCR 文字識別。**
+
+相關的技術文章: https://yebd1h.smartapps.cn/pages/blog/index?blogId=138413284
+
+先通過yoloV8 識別圖片含有車牌號碼,再提交給OPENCV 函數去識別 車牌文字。
 
 ## 客戶端 HTTP API
 
-​	客戶端 HTTP API : 不是雲端的API, 而是 [MEDIAGUARD] 提供的對外API 與web請求.
+​	客戶端 HTTP API : 不是雲端的API, 而是 [MEDIAGUARD] 提供的對外API 與web請求。
 
 ​	客戶端 URL : http://192.168.0.128:180/web/index.html
+
+
+
+## 測試模式
+
+<img src="README_IMGs/README/image-20241224145657914.png" alt="image-20241224145657914" style="zoom:80%;" />
+
+<img src="README_IMGs/README/image-20241224145157731.png" alt="image-20241224145157731" style="zoom:80%;" />

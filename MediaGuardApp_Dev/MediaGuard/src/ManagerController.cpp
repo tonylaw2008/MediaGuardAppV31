@@ -103,6 +103,9 @@ void clean_picture_run()
 	}
 }
 
+/*
+* 定時清理錄像
+*/
 void clean_video_store_run()
 {
 	while (!g_bExit.load())
@@ -145,7 +148,9 @@ void ManagerController::Init()
 }
 
 /*
+* A  撤換測試模式
 1、單個實例的方式，硬數據傳入  批處理啟動 測試用
+* 對應修改 infoStream.strInput = "rtsp://admin:Admin123@192.168.2.64:554";
 */
 void ManagerController::run_media_list()
 {
@@ -210,7 +215,9 @@ void ManagerController::run_media_list()
 }
 
 /*
-2、typedef std::list<std::shared_ptr<StreamMangement>>方式獲取實例指針  批處理啟動
+* B 正式運行
+* 2、多個鏡頭 共享指針隊列任務 批處理啟動
+* typedef std::list<std::shared_ptr<StreamMangement>>方式獲取實例指針  批處理啟動
 */
 void ManagerController::run_media_batch_list()
 {
@@ -246,18 +253,23 @@ void ManagerController::run_media_batch_list()
 	}
 
 	Service::StreamInList listx;
+	//獲取鏡頭列表對應的 StreamInfo(鏡頭解碼傳入參數結構體) 
+	//由於這個 StreamInfo結構體 的參數來自介個方面: 來自本地device.json, 雲端API->鏡頭列表\Camera list Schedule 等等綜合起來的結構體對象
+	//所以需要一個特定的函數處理綜合性業務
 	bool ret_trans = cameraMpeg.camera_list_trans_to_strean_info(sList, listx);
 	if (!ret_trans)
 	{
 		//LOG(INFO) << "func::cameraMpeg.camera_list_trans_to_strean_info -> TRANS TO STREAM INFO FAIL!!!";
 		std::cout << "func::cameraMpeg.camera_list_trans_to_strean_info -> TRANS TO STREAM INFO FAIL!!!" << std::endl;
 	}
-
+	
+	//鏡頭的傳入參數列表 
 	Service::StreamInList::iterator itr;
 	for (itr = listx.begin(); itr != listx.end(); ++itr)
 	{
 		std::cout << "\nCamera Rtsp = " << itr->strInput << " ---------------------- \n" << std::endl;
 
+		//用途 : 例如, RtspStreamHandle::StartDecode(const StreamInfo& infoStream)
 		StreamInfo streamInfo;
 		streamInfo.nCameraId = itr->nCameraId;
 		streamInfo.rtspIp = itr->rtspIp;
@@ -278,15 +290,23 @@ void ManagerController::run_media_batch_list()
 		streamInfo.nAudioIndex = itr->nAudioIndex;
 		streamInfo.nRefCount = itr->nRefCount;
 		streamInfo.bRtmp = false;  //不開啟rtmp,
+		streamInfo.cameraStatus = itr->cameraStatus;
 
-		std::shared_ptr<StreamMangement>  m_StreamPtrHandle = std::make_shared<StreamMangement>(Stream::kStreamTypeRtsp);
-		
-		bool isStart = m_StreamPtrHandle->StartDecode(streamInfo);
-
-		if (isStart)
+		if (streamInfo.cameraStatus)
 		{
-			m_StreamPtrList.push_back(m_StreamPtrHandle);
+			std::shared_ptr<StreamMangement>  m_StreamPtrHandle = std::make_shared<StreamMangement>(Stream::kStreamTypeRtsp);
+
+			bool isStart = m_StreamPtrHandle->StartDecode(streamInfo);
+
+			if (isStart)
+			{
+				m_StreamPtrList.push_back(m_StreamPtrHandle);
+			}
 		}
+		else {
+			std::cout << "\n[WARNING] Camera Id = " << streamInfo.nCameraId << "\t Current Camera Status : 0 (Disable)" << " need to update status from the cloud or local camera_list.json -> state ---------------------- \n" << std::endl;
+		}
+		
 	}
 
 	//輸入exit則退出
@@ -361,7 +381,11 @@ void ManagerController::clean_picture(int64_t picRemainMinutes)
 	std::vector<std::string> vecFile;
 	File::GetFilesOfDir(picture_path.string(), vecFile);
 
-	std::cout << "\n[Folder Picture :" << picture_path.string() << "] [Total Files :" << vecFile.size() <<"}\n" << std::endl;
+#ifdef DEBUG
+	//定時清理圖片
+	std::cout << "\n[Folder Picture :" << picture_path.string() << "] [Total Files :" << vecFile.size() << "}\n" << std::endl;
+#endif 
+	
 
 	//文件夾存在文件的情況下判斷是否大於設置的15分鐘
 	if (vecFile.size() > 0)
@@ -688,7 +712,7 @@ void ManagerController::main_initialize()
 
 	//系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
 #pragma region HeaderRegion 系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
-
+	 
 	//系統信息參考 System Information Reference
 	std::cout << "\n===================== SYSTEM INFORMATION REFERENCE =====================\n" << std::endl;
 
@@ -709,16 +733,19 @@ void ManagerController::main_initialize()
 
 	printf("avcodec_configuration details: \n%s\n\n", avcodec_configuration()); //解碼配置
 
+	std::cout << "\n\n\nPRESS ENTER TO CONTINUE .......\n\n\n" << std::endl;
+	char c1;
+	std::cin.get(c1);
 
 	// 應用程序配置信息
 	std::cout << "\n===================== APP DEVICE CONFIGURATION INFOMATION =====================\n" << std::endl;
 	 
-	std::cout << "\nDevice SerialNo:" << DEVICE_CONFIG.cfgDevice.device_serial_no << "\n\n" << std::endl;
+	std::cout << "\nThis Device SerialNo:" << DEVICE_CONFIG.cfgDevice.device_serial_no << "\n" << std::endl;
 
 	std::string main_root = current_working_directory();
-	std::cout << "\n\nCurrent Working Directory:" << main_root << "\n\n" << std::endl;
+	std::cout << "\n\nCurrent Working Directory:" << main_root << "\n" << std::endl;
 
-	std::cout << "\nHttp Server Cloud:" << DEVICE_CONFIG.cfgHttpServerCloud.url << "\n\n" << std::endl;
+	std::cout << "\nHttp Server Cloud:" << DEVICE_CONFIG.cfgHttpServerCloud.url << "\n" << std::endl;
 
 	//列出支持的硬件
 	std::cout << "\n===================== LIST SUPPORTED HARDWARES =====================\n" << std::endl;
@@ -728,15 +755,24 @@ void ManagerController::main_initialize()
 	std::cout << "\n===================== LIST DSSHOW DEVICES(USB CAMERAS) =====================\n" << std::endl;
 	StreamMangement::list_dshow_device();
 
+
 	std::cout << "\n\nIf it is running, you can terminate it by input exit\n" << std::endl;
 	std::cout << "\n--------------------------------------------------------------------------------------\n" << std::endl;
 
+	//--------------------------------------------------------------------------------------
+
+	std::cout << "\n\n\nPRESS ENTER TO START .......\n\n\n" << std::endl;
+	char c2;
+	std::cin.get(c2);
+	  
 #pragma endregion
 
 
 	//clear screen
 	ManagerController::clearScreen();
 
+	std::cout << "NOW TO START......\n" << c2 << std::endl;
+	std::cout << "\nHello The World...................\n" << std::endl;
 	
 	//創建應有的程序文件夾 例如 Video , Picture , Hls 
 	ManagerController::create_main_media_folder();

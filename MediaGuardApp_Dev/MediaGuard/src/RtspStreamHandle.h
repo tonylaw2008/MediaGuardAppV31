@@ -1,10 +1,7 @@
 ﻿#pragma once
 #include "./Common.h"
-#include "StreamDefine.h" 
-#include "StreamHandle.h" 
-#include "Time.h"  
 #include "Common/CvMatToBase64.h"
-#include "File.h" 
+
 
 //#pragma warning(push, 0)  //本來為了解決Enum Class的警告提示的，但不起作用
 //#include <../ffmpeg/include/libavutil/avutil.h>
@@ -133,7 +130,7 @@ private:
 	std::list<AVPacket> m_listPacket;
 
 	// cache the frame 
-	int m_nFrame;
+	int64_t m_nFrame;
 	std::mutex m_mtFrame;
 	std::list<PictInfo> m_listFrame; //rtsp stream unit 里面的图片信息队列
 

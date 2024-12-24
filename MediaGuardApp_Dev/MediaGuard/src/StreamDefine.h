@@ -112,6 +112,7 @@ namespace Stream
 		int nAudioIndex = -1;									//No.17  system default value
 		int nRefCount = 0;										//No.18  av_dict_set(&pOptions, "refcounted_frames", m_infoStream.nRefCount ? "1" : "0", 0);
 		bool bRtmp = false;										//No.19  保留用于兼容AudioStreamHandle和UsbStreamHandle 后续开发这两个需要去掉，统一使用RtspStreamHandle的逻辑
+		bool cameraStatus = true;								//No.20  鏡頭狀態 0:停用;  1:啟用
 	};
 
 

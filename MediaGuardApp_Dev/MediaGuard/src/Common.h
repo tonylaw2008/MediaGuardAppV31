@@ -18,22 +18,23 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
-
-#include "File.h"
-
+ 
 //跨平台的時間業務文件 位於src下
+#include "File.h"
 #include "Time.h"
+
+//業務功能
 #include "CarPlate.h" 
 #include "StreamDefine.h"
 #include "StreamHandle.h"
 
 #include "Basic/ThreadPool.h"
 #include "ErrorInfo/ErrorCode.h" 
-#include "StreamDefine.h"
 
-//curl 組件的頭文件
+//curl 組件
 #include "curl/curl.h"
 
+//配置相关
 #include "Config/DeviceConfig.h" //device.json配置文件相关
 #include "Config/ConfigFile.h"
 
@@ -44,6 +45,7 @@
 
 #include "Http/LibcurlHelper.h"
  
+//FFmpeg 4.2.2
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>

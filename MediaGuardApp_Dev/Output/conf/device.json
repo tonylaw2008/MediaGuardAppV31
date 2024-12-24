@@ -5,7 +5,7 @@
     "device_port": 180,
     "device_serial_no": "IbOEHlOZQz",
     "device_serial_no_hmac": "5834f9a3218e1a895002414dd966bdedd8a13261",
-    "device_is_online_always": false,
+    "device_is_online_always": true,
     "user": "admin2",
     "password": "admin123",
     "password_format": "plain text",
