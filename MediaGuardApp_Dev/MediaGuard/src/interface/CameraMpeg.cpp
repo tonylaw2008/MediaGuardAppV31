@@ -1,29 +1,5 @@
-﻿#pragma once
-#include <iostream>
-#include <exception>
-#include <sstream>
-#include <string>
-#include <iosfwd>
-#include <thread>
-#include "../ThreadPool.h" 
-#include "Basic/ThreadObject.h" 
-
-#include "Common/JsonHelper.h"
-#include "Common/Macro.h" 
-#include "ErrorInfo/ErrorCode.h" 
- 
-#include "Http/LibcurlHelper.h"
-#include "../StreamHandle.h" 
-#include "Config/DeviceConfig.h" 
-#include "../hmac/hmac_sha1.h"
-#include "../StreamHandle.h"
-#include "../StreamDefine.h"
-#include "../interface/CameraMpeg.h"
-#include "../interface/ResponseDefine.h"
- 
-#include "ErrorInfo/ErrorMessage.h"
-
-#include "Config/DeviceConfig.h"
+﻿#pragma once 
+#include "CameraMpeg.h"
 
 CameraMpeg::CameraMpeg()
 {

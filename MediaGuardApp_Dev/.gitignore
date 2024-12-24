@@ -2,6 +2,7 @@
 Other_ExcludeToGit/
 .vs/
 out/
+output/
 # Windows
 [Dd]esktop.ini
 Thumbs.db

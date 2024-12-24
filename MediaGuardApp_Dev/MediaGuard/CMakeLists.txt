@@ -48,12 +48,7 @@ set(3RDPARTY_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/include)
 
 # 路徑和引用系統參數
 IF(WIN32) # WIN32 版本 
-     
-    # opencv 4.9 改用 find_package(OpenCV REQUIRED)  
-    # set(OpenCV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/windows/x64/opencv4.9/include) 
-    # set(OpenCV_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/windows/x64/opencv4.9/lib) 
-     
-
+      
     # ffmpeg  4.2.2  改用 find_package(FFmpeg REQUIRED) 
     set(FFmpeg_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/windows/x64/ffmpeg/include)  
 	set(FFmpeg_LIBRARY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/windows/x64/ffmpeg/lib)  
@@ -72,18 +67,11 @@ IF(WIN32) # WIN32 版本
     include_directories(${RAPIDJSON_INCLUDE_DIR}) 
  
 elseif(UNIX) # LINUX 版本
-  
-    # opencv 4.9 改用 find_package(OpenCV REQUIRED)  
-    # set(${OpenCV_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/linux/x64/opencv4.9/include) 
-    # set(OpenCV_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/linux/x64/opencv4.9/lib) 
-
+   
     # ffmpeg 4.2.2 改用 find_package(FFmpeg REQUIRED) 
     set(FFmpeg_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/linux/x64/ffmpeg/include) 
 	set(FFmpeg_LIBRARY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/linux/x64/ffmpeg/lib) 
-
-    # 需要openssl編譯版本 openssl-1.1.1q 改為 find_package
-    # set(Openssl_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/3rdparty/linux/x64/openssl-1.1.1q)
-    # set(Openssl_LIBRARIES ${CMAKE_SOURCE_DIR}/3rdparty/linux/x64/openssl-1.1.1q/)
+     
     # openssl1.1.1l 改為如下 -----------------------------------------------------
     find_package(OpenSSL REQUIRED)
 
@@ -179,7 +167,7 @@ foreach(file ${LOCAL_HEADER_DIR})
    message(${PROJECT_NAME} "*** GLOB  LOCAL_HEADER_DIR ***:: ${file}") 
 endforeach()
  
-# 排除某個目錄
+# 排除某個目錄 這部分直接複製到 Ouput 就可以配合MediaGuard.exe 運行
 list(REMOVE_ITEM SOURCES "src/web/*.*")       # web前端    
 list(REMOVE_ITEM SOURCES "src/picture/*.*")   # 保存圖片文件夾 
 list(REMOVE_ITEM SOURCES "src/video/*.*")     # 保存mp4文件夾 

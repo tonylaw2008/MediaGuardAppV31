@@ -22,6 +22,7 @@ int RtspStreamHandle::read_interrupt_cb(void* pContext)
 	return 0;
 }
 
+/*獲得解碼文法結構體的像素格式*/
 enum AVPixelFormat RtspStreamHandle::get_hw_format(AVCodecContext* ctx, const enum AVPixelFormat* pix_fmts)
 {
 	const enum AVPixelFormat* pPixeFmt;
@@ -137,16 +138,22 @@ void RtspStreamHandle::GetVideoSize(int& width, int& height)
 
 void RtspStreamHandle::PushFrame(const cv::Mat& frame)
 {
-	// save per 25 frame
+	// save per 25 frame 即25幀保存一次圖片 但具體要看傳入的保存圖片頻率  
+	// m_infoStream.savePictRate 注意這裡只是抽取圖片的頻率 並不是真的保存硬盤
+	// 保存硬盤 關鍵要判斷傳入的參數 m_infoStream.bSavePic
 	m_nFrame++;
 	if (0 == round(m_nFrame % m_infoStream.savePictRate)) {
 		m_nFrame = 0; //重置计数器
 		std::string filename = get_filename(FType::kFileTypePicture);
 		//多个线程任务提交到线程池保存磁盘
 		m_poolSavePic.Commit([=]()
-			{
-				cv::imwrite(filename, frame);
-			});
+			{ 
+				//如果設置保存圖片到硬盤
+				if (m_infoStream.bSavePic)
+				{
+					cv::imwrite(filename, frame);
+				}
+		});
 
 		{
 			std::lock_guard<std::mutex> lock(m_mtFrame);
@@ -172,6 +179,30 @@ bool RtspStreamHandle::PopFrame(PictInfo& pictInfo)
 	pictInfo = m_listFrame.front();
 	m_listFrame.pop_front();
 	return true;
+}
+
+//队列处理
+void RtspStreamHandle::push_packet(const AVPacket& packet)
+{
+	/*
+	  這樣的寫法 參考 C++ 的 Rii 編程思想
+	  REF : https://www.cnblogs.com/jiangbin/p/6986511.html
+	  使用std::unique_lock或者std::lock_guard对互斥量进行状态管理：
+	  在创建std::lock_guard对象的时候，会对std::mutex对象进行lock，当std::lock_guard对象在超出作用域时，会自动std::mutex对象进行解锁，这样的话，就不用担心代码异常造成的线程死锁。
+	*/
+	//把packet推送到RtspStreamHandle 下的  m_mtPacket
+	{
+		std::lock_guard<std::mutex> lock(m_mtPacket);
+		m_listPacket.push_back(packet);
+	}
+
+	/*
+	std::condition_variable （m_cvFrame）
+	std::condition_variable，是C++11提供的条件变量，可用于同时阻塞一个线程或多个线程。一般的，生产者线程利用支持std::mutex的std::lock_guard/std::unique_lock修改共享变量后，并通知condition_variable。
+	消费者线程获取同一个std::mutex(std::unique_lock所持有)，并调用std::condition_variable的wait, wait_for, or wait_until。wait操作会释放互斥量，同时挂起该线程。
+	当条件变量收到通知、超时到期或发生虚假唤醒时，线程被唤醒，互斥量也被原始地重新获取。需要注意的是，如果是虚假唤醒，线程应该检查条件并继续等待，以保证业务的正确性。ref:  https://blog.csdn.net/heusunduo88/article/details/124830850.
+	*/
+	m_cvFrame.notify_one();
 }
 
 bool RtspStreamHandle::start_decode()
@@ -564,6 +595,7 @@ bool RtspStreamHandle::open_output_hls_stream(AVFormatContext*& pFormatCtx, int 
 		printf("Invalid output file\n");
 		return false;
 	}
+
 	if (streamDecodeType != StreamDecodeType::NOSTREAM)
 	{
 		if (streamDecodeType == StreamDecodeType::HLS)
@@ -571,6 +603,7 @@ bool RtspStreamHandle::open_output_hls_stream(AVFormatContext*& pFormatCtx, int 
 		else
 			m_infoStream.strOutput = get_filename(FType::kFileTypeRtmp);
 	}
+
 	std::string strFormatName = "";
 
 	if (streamDecodeType == StreamDecodeType::HLS)
@@ -811,31 +844,7 @@ void RtspStreamHandle::do_decode()
 	printf("\nReading ended,CameraId=%i read %llu\n", m_infoStream.nCameraId, nFrame);
 	printf("\n------------------------------------------------------------------------------\n");
 }
-
-//队列处理
-void RtspStreamHandle::push_packet(const AVPacket& packet)
-{
-	/*
-	  這樣的寫法 參考 C++ 的 Rii 編程思想
-	  REF : https://www.cnblogs.com/jiangbin/p/6986511.html
-	  使用std::unique_lock或者std::lock_guard对互斥量进行状态管理：
-	  在创建std::lock_guard对象的时候，会对std::mutex对象进行lock，当std::lock_guard对象在超出作用域时，会自动std::mutex对象进行解锁，这样的话，就不用担心代码异常造成的线程死锁。
-	*/
-
-	{
-		std::lock_guard<std::mutex> lock(m_mtPacket);
-		m_listPacket.push_back(packet);
-	}
-
-	/*
-	std::condition_variable （m_cvFrame）
-	std::condition_variable，是C++11提供的条件变量，可用于同时阻塞一个线程或多个线程。一般的，生产者线程利用支持std::mutex的std::lock_guard/std::unique_lock修改共享变量后，并通知condition_variable。
-	消费者线程获取同一个std::mutex(std::unique_lock所持有)，并调用std::condition_variable的wait, wait_for, or wait_until。wait操作会释放互斥量，同时挂起该线程。
-	当条件变量收到通知、超时到期或发生虚假唤醒时，线程被唤醒，互斥量也被原始地重新获取。需要注意的是，如果是虚假唤醒，线程应该检查条件并继续等待，以保证业务的正确性。ref:  https://blog.csdn.net/heusunduo88/article/details/124830850. 
-	*/
-	m_cvFrame.notify_one();
-}
-
+ 
 bool RtspStreamHandle::decode_video_packet(AVPacket* packet)
 {
 	int nCode = avcodec_send_packet(m_pVideoDecoderCtx, packet);
@@ -897,7 +906,7 @@ bool RtspStreamHandle::decode_video_packet(AVPacket* packet)
 }
 
 /// <summary>
-///  音频解码
+///  音频Packet解码
 /// </summary>
 /// <param name="packet"></param>
 /// <returns></returns>
@@ -917,12 +926,13 @@ bool RtspStreamHandle::decode_audio_packet(const AVPacket& packet)
 	while (nCode >= 0) {
 		nCode = avcodec_receive_frame(m_pAudioDecoderCtx, pFrame);
 		if (AVERROR(EAGAIN) == nCode || AVERROR_EOF == nCode) {
-
+			//下面 區塊名稱 # GET_AV_SAMPLE (line 935) 合理估計應該寫到這裡,先做一個備註 2024-12-24
 		}
 		else if (nCode < 0) {
 			fprintf(stderr, "Error during decoding\n");
 			succ = false;
 		}
+#pragma region GET_AV_SAMPLE 音頻包採樣   
 		//这段是音频解码保存 去掉注释进行测试 2023-2-10
 		/*
 		参考视音频同步 实现 代码:https://github.com/brookicv/FSplayer
@@ -941,6 +951,7 @@ bool RtspStreamHandle::decode_audio_packet(const AVPacket& packet)
 		//}
 
 		//ref http://cn.voidcc.com/question/p-gjfuvrev-du.html
+#pragma endregion #
 	}
 
 	av_frame_free(&pFrame);

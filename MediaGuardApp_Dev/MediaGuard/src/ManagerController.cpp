@@ -675,6 +675,8 @@ void ManagerController::signal_check_main()
 	};
 }
 
+
+/*主控台初始化顯示的系統環境信息與程序配置信息 例如 Device.json的設置*/
 void ManagerController::main_initialize()
 {
 #ifdef _WIN32
@@ -684,12 +686,59 @@ void ManagerController::main_initialize()
   
 #endif
 
+	//系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
+#pragma region HeaderRegion 系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
+
+	//系統信息參考 System Information Reference
+	std::cout << "\n===================== SYSTEM INFORMATION REFERENCE =====================\n" << std::endl;
+
+	printf("OpenSSL version: %s\n", OpenSSL_version(OPENSSL_VERSION));
+
+	// 初始化 FFmpeg 
+	std::cout << "\n===================== FFMPEG AVFORMAT NETWORK INIT =====================\n" << std::endl;
+	avformat_network_init();
+
+	// 獲取 FFmpeg 的版本號
+	const char* ffmpeg_version = av_version_info();
+	std::cout << "\nFFmpeg Version: " << ffmpeg_version << std::endl;
+	unsigned codec_version = avcodec_version();
+	std::cout << "\nFFMPEG AVCODEC VERSION: "
+		<< (codec_version >> 16) << "."        // 主版本號
+		<< ((codec_version >> 8) & 0xFF) << "." // 次版本號
+		<< (codec_version & 0xFF) << "\n" << std::endl; // 修訂版本號
+
+	printf("avcodec_configuration details: \n%s\n\n", avcodec_configuration()); //解碼配置
+
+
+	// 應用程序配置信息
+	std::cout << "\n===================== APP DEVICE CONFIGURATION INFOMATION =====================\n" << std::endl;
+	 
+	std::cout << "\nDevice SerialNo:" << DEVICE_CONFIG.cfgDevice.device_serial_no << "\n\n" << std::endl;
+
+	std::string main_root = current_working_directory();
+	std::cout << "\n\nCurrent Working Directory:" << main_root << "\n\n" << std::endl;
+
+	std::cout << "\nHttp Server Cloud:" << DEVICE_CONFIG.cfgHttpServerCloud.url << "\n\n" << std::endl;
+
+	//列出支持的硬件
+	std::cout << "\n===================== LIST SUPPORTED HARDWARES =====================\n" << std::endl;
+	StreamMangement::list_supported_hardware();
+
+	//列出電腦USB CAMERA
+	std::cout << "\n===================== LIST DSSHOW DEVICES(USB CAMERAS) =====================\n" << std::endl;
+	StreamMangement::list_dshow_device();
+
+	std::cout << "\n\nIf it is running, you can terminate it by input exit\n" << std::endl;
+	std::cout << "\n--------------------------------------------------------------------------------------\n" << std::endl;
+
+#pragma endregion
+
+
 	//clear screen
 	ManagerController::clearScreen();
 
-	std::string main_root = current_working_directory();
-	std::cout << "\n\nCurrent working directory:" << main_root << "\n\n" << std::endl;
-
+	
+	//創建應有的程序文件夾 例如 Video , Picture , Hls 
 	ManagerController::create_main_media_folder();
 }
 

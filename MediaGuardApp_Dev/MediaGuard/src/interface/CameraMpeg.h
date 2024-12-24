@@ -1,15 +1,29 @@
 ﻿#pragma once 
 #include <string>
-
-//項目本來有一個Time.h的文件 應該不需要下面的做法 引用系統的 2024-12-22
-//#ifdef _WIN32
-//#include <Time.h> 
-//#elif __linux__ 
-//#include <time.h>  // 请自己补linux内容
-//#endif
-
 #include <sstream> 
+#include <thread>
+#include <iostream>
+#include <exception> 
+#include <iosfwd>
 #include <stdbool.h> 
+#include <openssl/crypto.h>
+#include "Basic/ThreadPool.h"
+#include "Basic/ThreadObject.h"
+
+#include "Common/JsonHelper.h"
+#include "Common/Macro.h" 
+#include "ErrorInfo/ErrorCode.h" 
+#include "ErrorInfo/ErrorMessage.h"
+#include "Http/LibcurlHelper.h" 
+#include "Config/DeviceConfig.h" 
+
+#include "../hmac/hmac_sha1.h"
+
+#include "../StreamHandle.h" 
+#include "../StreamDefine.h"
+#include "../interface/CameraMpeg.h"
+#include "../interface/ResponseDefine.h"
+
 namespace Service
 {
 	/*

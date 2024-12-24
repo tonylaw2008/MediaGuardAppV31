@@ -6,7 +6,7 @@
 #include <iosfwd>
 
 #include <thread>
-#include "../ThreadPool.h" 
+#include "Basic/ThreadPool.h"
 #include "Basic/ThreadObject.h"   
 #include "Common/JsonHelper.h" 
 #include "Common/Macro.h" 

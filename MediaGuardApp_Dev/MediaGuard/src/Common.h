@@ -3,30 +3,35 @@
 #include <cstdio>
 #include <string>
 #include <fstream>
-#include <string>
 #include <list>
+
 #ifdef _WIN32
 #include <io.h>
 #include <direct.h>
 #endif 
+
 #include <chrono>
 #include <thread>
 
+//opencv 4.8.1 組件
 #include "opencv2/core/hal/interface.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
 #include "File.h"
+
+//跨平台的時間業務文件 位於src下
 #include "Time.h"
 #include "CarPlate.h" 
 #include "StreamDefine.h"
 #include "StreamHandle.h"
 
-#include "ThreadPool.h"
+#include "Basic/ThreadPool.h"
 #include "ErrorInfo/ErrorCode.h" 
 #include "StreamDefine.h"
 
+//curl 組件的頭文件
 #include "curl/curl.h"
 
 #include "Config/DeviceConfig.h" //device.json配置文件相关
