@@ -83,7 +83,9 @@ enum class TaskType
 
 ```
 
-### 	
+### LOW LEVEL
+
+### <img src="README_IMGs/README/image-20241224135532853.png" alt="image-20241224135532853" style="zoom:80%;" />	
 
  
 
