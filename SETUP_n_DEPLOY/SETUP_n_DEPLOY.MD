@@ -4,7 +4,7 @@
 
 ## DEPLOY
 
-### 	LINIX ENVIRMENT
+### 	LINIX ENVIRONMENT
 
 
 
@@ -20,7 +20,7 @@ export LD_LIBRARY_PATH=/home/tonylaw/Desktop/MediaGuard_Cmake:$LD_LIBRARY_PATH
 ./MediaGuard
 ```
 
-### 	WINDOWS ENVIRMENT
+### 	WINDOWS ENVIRONMENT
 
 
 
