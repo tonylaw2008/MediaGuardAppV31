@@ -703,11 +703,12 @@ void ManagerController::signal_check_main()
 /*主控台初始化顯示的系統環境信息與程序配置信息 例如 Device.json的設置*/
 void ManagerController::main_initialize()
 {
+
+// 設置終端標題
 #ifdef _WIN32
 	SetConsoleTitle("\nMedia Guard Ver3.1 ");
-#elif __linux__
-	std::cout << "\nMedia Guard Ver3.1 \n\n\n" << std::endl;
-  
+#elif __linux__ 
+	std::cout << "\033]0;Media Guard Ver3.1\007";
 #endif
 
 	//系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
@@ -761,6 +762,11 @@ void ManagerController::main_initialize()
 
 	//--------------------------------------------------------------------------------------
 
+	std::string test_url;
+	httpserver::get_http_local_device_url(test_url);
+	test_url = test_url.append("test");
+	std::cout << "\nOpen test url to verlify [" << test_url << "] when started...................\n" << std::endl;
+
 	std::cout << "\n\n\nPRESS ENTER TO START .......\n\n\n" << std::endl;
 	char c2;
 	std::cin.get(c2);
@@ -773,7 +779,7 @@ void ManagerController::main_initialize()
 
 	std::cout << "NOW TO START......\n" << c2 << std::endl;
 	std::cout << "\nHello The World...................\n" << std::endl;
-	
+	 
 	//創建應有的程序文件夾 例如 Video , Picture , Hls 
 	ManagerController::create_main_media_folder();
 }

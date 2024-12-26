@@ -101,11 +101,17 @@ void DeviceConfig::Device::LoadDevFromJson(rapidjson::Value& value)
 	JS_PARSE_OPTION(user, value, String, user);
 	JS_PARSE_OPTION(password, value, String, password);
 	JS_PARSE_OPTION(password_format, value, String, password_format);
-	JS_PARSE_OPTION(local_login, value, String, password);			//訪問本地設備API賬戶
+	JS_PARSE_OPTION(local_login, value, String, local_login);			//訪問本地設備API賬戶
 	JS_PARSE_OPTION(local_password, value, String, local_password); //訪問本地設備API密碼
 	JS_PARSE_OPTION(local_authorization, value, String, local_authorization); //訪問本地local_authorization token
 	JS_PARSE_OPTION(reamrks, value, String, reamrks);
 	JS_PARSE_OPTION(language_code, value, String, language_code);
+
+	{
+		std::stringstream local_device_url_stream;
+		local_device_url_stream << "http" << "://" << device_ip << ":" << device_port << "/";
+		local_device_url = local_device_url_stream.str();
+	}
 }
 
 /*云端配置Url*/

@@ -26,6 +26,10 @@ public:
 		return buffer;
 	}
 
+	/// <summary>
+	/// 獲取日期時間 : 2024-12-25 17:44:16
+	/// </summary>
+	/// <returns></returns>
 	static std::string GetCurrentSystemTime()
 	{
 		time_t ltime = time(NULL);
@@ -41,8 +45,7 @@ public:
 		strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &ltm);
 		return buffer;
 	}
-
-
+	
 	static int64_t GetMilliTimestamp()
 	{
 		auto curr = std::chrono::system_clock::now();

@@ -120,3 +120,10 @@ int nCode = clientCurl.UploadFile(para, pathFileame, strRst);
 <img src="README_IMGs/README/image-20241224145657914.png" alt="image-20241224145657914" style="zoom:80%;" />
 
 <img src="README_IMGs/README/image-20241224145157731.png" alt="image-20241224145157731" style="zoom:80%;" />
+
+![image-20241224194232226](README_IMGs/README/image-20241224194232226.png)
+
+​			**鏡頭是否停用**
+
+​			增加判斷鏡頭是否停用狀態 StreamInfo.cameraStatus
+

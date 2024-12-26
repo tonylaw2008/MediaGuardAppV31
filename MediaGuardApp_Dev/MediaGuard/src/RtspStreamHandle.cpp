@@ -764,8 +764,8 @@ void RtspStreamHandle::do_decode()
 	std::tm* start_time_local_tm = std::localtime(&start_time_t);
 	  
 	//LOG(INFO) << "\ninitializing cameraId=" << m_infoStream.nCameraId << " start_time=" << start_time << "\n" << std::endl;
-	std::cout << "\nInitializing cameraId=" << m_infoStream.nCameraId << " start time=" << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
-
+	std::cout << "\n" << Time::GetCurrentSystemTime() << " Initializing cameraId = " << m_infoStream.nCameraId << " start time : " << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
+	 
 	cameraConnectingStatus = CameraConnectingStatus::InPlaying; //改变 状态为Inplaying
 	while (!m_bExit)
 	{
@@ -778,17 +778,17 @@ void RtspStreamHandle::do_decode()
 			//读帧失败，改变当前连接状态为 InDisConnencted（断开状态中）
 			cameraConnectingStatus = CameraConnectingStatus::InDisConnencted;
 
-#pragma region NetWork Reconnecting 处理网络中断重连 网络中断，尝试重连
+#pragma region NETWORK RECONNECTING 处理网络中断重连 网络中断，尝试重连
 			// 处理网络中断重连 
 			// 网络中断，尝试重连
-			std::cout << "\nCameraId=" << m_infoStream .nCameraId << "CAMERA DISCONNECTED, NETWORK RECONNECTING......\n" << std::endl; 
-			av_log(NULL, AV_LOG_ERROR, "\nCameraId=%d CAMERA DISCONNECTED, NETWORK RECONNECTING......\n", m_infoStream.nCameraId);
+			std::cout <<  "\n"<< Time::GetCurrentSystemTime() <<"CameraId=" << m_infoStream .nCameraId << "CAMERA DISCONNECTED, NETWORK RECONNECTING......\n" << std::endl;
+			av_log(NULL, AV_LOG_ERROR, "\nCameraId=%d CAMERA DISCONNECTED, NETWORK RECONNECTING......\n\n", m_infoStream.nCameraId);
 
-			av_dict_set(&pOption, "http_proxy", m_infoStream.strInput.c_str(), 0);
-			avformat_open_input(&m_pInputAVFormatCtx, m_infoStream.strInput.c_str(), NULL, &pOption);
+			//av_dict_set(&pOption, "http_proxy", m_infoStream.strInput.c_str(), 0);
+			//avformat_open_input(&m_pInputAVFormatCtx, m_infoStream.strInput.c_str(), NULL, &pOption);  //如果處於 VISUAL STUDIO DEBUG 調試的情況下,鏈接中的時候,也會調到這裡重連
 #pragma endregion
-			//使用上面的網絡重連,註釋掉break,使鏡頭一直處於重連操作
-			//break; //中断读取帧 
+			//使用上面的網絡重連[NETWORK RECONNECTING],註釋掉break,使鏡頭一直處於重連操作
+			break; //中断读取帧 //注釋 line 784, 785 恢復 break
 		}
 		 
 		bool bSucc = false;
@@ -1058,14 +1058,14 @@ void RtspStreamHandle::av_packet_rescale_ts(AVPacket* pkt, AVRational src_tb, AV
 void RtspStreamHandle::release_output_format_context(AVFormatContext*& pFmtContext)
 {
 	if (pFmtContext)
-	{
+	{ 
 		av_write_trailer(pFmtContext);
 
 		start_time = av_gettime(); //重新记录一个新的开始时间
 		std::chrono::system_clock::time_point curr_sys_clock = std::chrono::system_clock::now();
 		time_t start_time_t = std::chrono::system_clock::to_time_t(curr_sys_clock); 
 		std::tm* start_time_local_tm = std::localtime(&start_time_t); 
-		std::cout << "Finished File " << m_infoStream.mediaFormate << " - " << m_path_filename << "\nIf again then record start time : " << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
+		std::cout << "Finished File nCameraId=" << m_infoStream.nCameraId <<" mediaFormate=" << m_infoStream.mediaFormate << " - " << m_path_filename << "\nIf again then record start time : " << std::put_time(start_time_local_tm, "%Y-%m-%d %H:%M:%S") << "\n" << std::endl;
 
 		if (!(pFmtContext->oformat->flags & AVFMT_NOFILE))
 		{

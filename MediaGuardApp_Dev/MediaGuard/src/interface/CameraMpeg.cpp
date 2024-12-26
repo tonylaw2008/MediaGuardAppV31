@@ -209,6 +209,8 @@ bool CameraMpeg::camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::
 		//LOG(ERROR) << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse;
 		std::cout << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse << std::endl;
 	}
+
+	return true;
 }
 
 /*
@@ -1306,7 +1308,7 @@ bool CameraMpeg::get_task_list_by_camera_id(int& cameraId, Service::TaskInfoList
 			{
 				//LOG(INFO) << "CameraMpeg::get_task_list_by_camera_id fail: " << ss_path_file_name.str();
 				std::cout << "CameraMpeg::get_task_list_by_camera_id fail: " << ss_path_file_name.str() << std::endl;
-				return CURLE_FAILED_INIT;
+				return false; //return CURLE_FAILED_INIT;
 			}
 		}
 	}

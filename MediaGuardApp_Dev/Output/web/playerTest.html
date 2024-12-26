@@ -28,7 +28,8 @@
         <span class="btn-success p-1 rounded">1.TEST PLYER TOKEN</span>
 
         <div class="row p-3 mb-1">
-            <label>HLS URL </label> <input id="hlsUrlx" value="http://192.168.0.146:180/hls/6/1/1/index.m3u8?token=2ccd575f54be0d71277a82f8baf2e8ea" />
+            <label>HLS URL </label> <input id="hlsUrlx" value="http://192.168.0.128:180/hls/12/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289" /><br /
+			<span class="text-primary small h6" >HLS URL FORMAT : http://192.168.0.128:180/hls/12/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289</span>
         </div>
 
         <div class="row p-3 mb-1">
@@ -37,7 +38,8 @@
         <div class="row p-3 mb-3">
 
             <label>INPUT PASSWORD </label> <input id="mediaPassword" value="123456" /><br />
-            <span class="text-dark" title="32bit lower case">media:123456 MD5 = 2ccd575f54be0d71277a82f8baf2e8ea</span>
+            <span class="text-dark" title="32bit lower case">media:123456 LOWER MD5 = 2ccd575f54be0d71277a82f8baf2e8ea</span><br />
+			<span class="text-warning" >LOWER MD5 ONLINE : https://www.md5hashgenerator.com/</span>
         </div>
         <div class="row p-3">
             <div id="dplayer1"></div>
@@ -54,7 +56,7 @@
 
         <script src="https://cdn.jsdelivr.net/hls.js/latest/hls.min.js"></script>
         <video id="video1" style="width:500px;height: 300px; border: 1px solid red;">
-            测试
+            TEST
         </video>
 
     </div>

@@ -1,10 +1,9 @@
-﻿//
+﻿//  cpp-httplib 組件來源與學習
 //  HttpServer.cc  from https://gitee.com/AIQICcorg/cpp-httplib support
-//
 //  Copyright (c) 2019 Yuji Hirose. All rights reserved.
 //  MIT License
 #pragma once
-
+ 
 #include <chrono>  //from httpcgi example 2024-3-10
 #include <cstdio>  //from httpcgi example 2024-3-10
 
@@ -16,26 +15,46 @@
 #include "Common/Cmd5.h"
 #include "Config/DeviceConfig.h"
  
+
  
-//httpserver::httpserver() {
-//	 
-//}
-//httpserver::~httpserver()
-//{
-//}
+httpserver::~httpserver() 
+{
+	// 析構函數  
+	 
+}
+httpserver::httpserver() 
+{ 
+}
+ 
+void httpserver::get_http_local_device_url(std::string& http_local_device_url)
+{
+	const std::string http_scheme_local = "http";
+
+	std::stringstream http_local_device_url_str_stream;
+	{ http_local_device_url_str_stream << http_scheme_local << "://" << DEVICE_CONFIG.cfgDevice.device_ip << ":" << DEVICE_CONFIG.cfgDevice.device_port << "/"; }
+	 
+	http_local_device_url = http_local_device_url_str_stream.str();
+}
 
 void allowCorsAccess(httplib::Response& res) {
+
+	// 定義允許的來源  
+	/*std::set<std::string> allowed_origins = {
+		DEVICE_CONFIG.cfgHttpServerCloud.url,
+		DEVICE_CONFIG.cfgDevice.local_device_url
+	};*/
+
 	// 允许跨域请求
 	res.set_header("Access-Control-Allow-Origin", "*");
+	// 是否允許夾帶COOKIE 等等
 	res.set_header("Access-Control-Allow-Credentials", "true");
+	// 是否允許私域請求Internet (目前Chrome要求帶證書才允許)
 	res.set_header("Access-Control-Allow-Private-Network", "true");
+	// 所有http動作都允許
 	res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH");
+	// 貌似使用通配符(*)是無效的
 	//res.set_header("Access-Control-Allow-Headers", "*"); //添加這個特定的試試，之前是注釋掉的 2023-8-6
-
-	//std::stringstream allow_req_uri;
-	//{allow_req_uri << DEVICE_CONFIG.cfgHttpServer.scheme << "://" << DEVICE_CONFIG.cfgHttpServer.host << ":" << DEVICE_CONFIG.cfgHttpServer.port; }
-	//res.set_header("Access-Control-Allow-Origin", allow_req_uri.str());
-
+	 
 	res.set_header(
 		"Access-Control-Allow-Headers",
 		"X-Custom-Header,DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-"
@@ -57,6 +76,7 @@ std::string dump_headers(const httplib::Headers& headers) {
 	return s;
 }
 
+//request http log
 std::string log(const httplib::Request& req, const httplib::Response& res) {
 	std::string s;
 	char buf[BUFSIZ];
@@ -97,45 +117,44 @@ std::string log(const httplib::Request& req, const httplib::Response& res) {
 // 校验token參數
 bool UserPasswordValidByToken(const httplib::Request& req, httplib::Response& res) {
 
+	std::string local_login = DEVICE_CONFIG.cfgDevice.local_login;
+	std::string local_password = DEVICE_CONFIG.cfgDevice.local_password;
+
+	// 获取请求路径
+	std::string path = req.path;
+#ifdef DEBUG
+	printf("\n[funs::UserPasswordValidByToken]path = %s\n\n", path.c_str());
+#endif // DEBUG
+	 
 	// 认证用户秘钥
 	std::string token = req.get_param_value("token");
-	std::string local_authorization = DEVICE_CONFIG.cfgDevice.local_authorization;
-	//printf("\nUserPasswordValidByToken  token = %s\n\n config local_authorization =%s\n\n", token.c_str(), local_authorization.c_str());
 
+	std::stringstream md5_stringstream;
+	{ md5_stringstream << local_login << ":" << local_password; }
+	 
+	std::string local_authorization = Cmd5::get_md5(md5_stringstream.str());
+#ifdef DEBUG
+	printf("\nUserPasswordValidByToken: \ntoken =%s\nlocal_authorization=%s \t ...lower md5(local_login:local_password) \n\n", token.c_str(), local_authorization.c_str());
+#endif // DEBUG
+	 
 	if (token.empty()) {
 		res.status = 401;
 		res.set_content("No Authentic 401 (token empty)", "text/plain");
 		return false;
 	}
-
-#ifdef _WIN32
-	if (!token._Equal(local_authorization)) {
-		res.status = 401;
-		return false;
-	}
-	else {
-		return true;
-	}
-#elif __linux__
-	// 请自行补充 
-	//return true; 
 	if (token != local_authorization) {
 		res.status = 401;
 		return false;
 	}
 	else {
 		return true;
-	}
-#endif
+	} 
 }
 
 /// <summary>
-/// 校验用户名密码以Bearer Token 形式
+/// 校验用户名密码以Bearer Token 形式 (沒其他函數引用此功能)
 /// 用户名密碼保存在 ./conf/device.json下的節點device_config.local_login:device_config.local_password
-/// </summary>
-/// <param name="req"></param>
-/// <param name="res"></param>
-/// <returns></returns>
+/// 用於本地MediaGuard請求,注意:這裡不是雲端賬號
 bool UserPwdValidByBearAuthorization(const httplib::Request& req, httplib::Response& res)
 {
 	// 认证用户秘钥
@@ -143,14 +162,10 @@ bool UserPwdValidByBearAuthorization(const httplib::Request& req, httplib::Respo
 	if (authentication.empty())
 	{
 		res.status = 401;
-#ifdef _WIN32
-		res.set_content(transcoding::T2UTF8("No Header Authorization To Access!").c_str(), "text/plain");
-#elif __linux__
-		// 请自行补充
-#endif
+		res.set_content("No Header Authorization To Access! (token empty :401)", "text/plain"); 
 		return false;
 	}
-
+	
 	// 认证用户秘钥
 	std::string local_login = DEVICE_CONFIG.cfgDevice.local_login;
 	std::string local_password = DEVICE_CONFIG.cfgDevice.local_password;
@@ -158,46 +173,40 @@ bool UserPwdValidByBearAuthorization(const httplib::Request& req, httplib::Respo
 	std::stringstream md5_stringstream;
 	{ md5_stringstream << local_login << ":" << local_password; }
   
-	std::string md5_lower_string = md5_stringstream.str();  // ★★★★★★ Cmd5::get_md5(md5_stringstream.str());  //需要用openssl1.1.1q,後續改回來, 不使用md5 則和雲端密碼驗證對不上的.
+	//device.json -> user:password MD5 (device.json-> user:password )
+	std::string md5_lower_string = Cmd5::get_md5(md5_stringstream.str());
 	//========================================================================================================================================
-	//openssl-1.1.1q出現問題導致
-	//先屏蔽了 std::string md5_lower_string =  Cmd5::get_md5(md5_stringstream.str()); // LINUX 編譯出錯
-	///usr/bin/ld: /home/tonylaw/Desktop/MediaGuard_Cmake/3rdlib/linux/x64/openssl-1.1.1q/libcrypto.so.1.1:
-	//error adding symbols : DSO missing from command line
-	//https ://blog.csdn.net/q7w8e9r4/article/details/134631522 error adding symbols: DSO missing from command line
-	//上述參考: LINUX\设置共享库 或參考 add_executable(your_target_name your_source_file.cpp - lcrypto)
-
-
-
-	std::string local_authorization = DEVICE_CONFIG.cfgDevice.local_authorization;
-
-#ifdef _WIN32
-	if (!authentication._Equal(local_authorization))
+	//std::string local_authorization = DEVICE_CONFIG.cfgDevice.local_authorization;
+	//避免設置device.json出錯,改為:
+	std::string local_authorization = md5_lower_string;
+	if (authentication != local_authorization)
 	{
 		res.status = 401;
 		res.set_content(transcoding::T2UTF8("not authorized to access this interface(authentication no equal)!").c_str(), "text/plain");
 		return false;
 	}
 	return true;
-
-#elif __linux__
-	// 请自行补充
-	return false;
-#endif
-
 }
+
 //初始化和定義
 int httpserver::http_server_run(void) {
-
+	 
 //http server
 httplib::Server svr;
-
-
+   
+	std::string local_device_url;
+	httpserver::get_http_local_device_url(local_device_url);
+	std::string local_login = DEVICE_CONFIG.cfgDevice.local_login;
+	std::string local_password = DEVICE_CONFIG.cfgDevice.local_password;
 
 	if (!svr.is_valid()) {
 		printf("server has an error...\n");
 		return -1;
 	}
+
+	printf("\n[HTTP SERVER STARTING......] \n\n[TEST HTML URL : %stest] redirect to /web/playtest.html \n\n", local_device_url.c_str());
+	 
+
 	// User defined file extension and MIME type mappings
 	svr.set_file_extension_and_mimetype_mapping("txt", "text/plain");
 	svr.set_file_extension_and_mimetype_mapping("md", "text/plain");
@@ -218,9 +227,66 @@ httplib::Server svr;
 
 	svr.Get("/", [=](const httplib::Request& /*req*/, httplib::Response& res) {
 		res.set_redirect("/hi");
-		});
+		printf("\n%s/ redirect to /hi \n\n", local_device_url.c_str());
+	});
 
-#ifdef _WIN32
+	//*測試頁面 from: index_template.html */
+	svr.Get("/test", [=](const httplib::Request& /*req*/, httplib::Response& res) {
+
+		int nCode = 0;
+		std::string file_content;
+		if (nCode == File::readFileContent("./web/index_template.html", file_content))
+		{ 
+			//device.json -> user:password MD5 (device.json-> user:password )
+			std::stringstream md5_stringstream;
+			{ md5_stringstream << local_login << ":" << local_password; }
+			 
+			std::string local_authorization = Cmd5::get_md5(md5_stringstream.str());
+
+			std::string replace_admin_phrase = "$admin$";
+			std::string replace_password_phrase = "$password$";
+			std::string replace_local_authorization_phrase = "$local_authorization$"; 
+			std::string replace_camera_hls_phrase = "$camera_hls$";
+			 
+			//格式實例 : http://192.168.0.128:180/hls/8/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289 
+			std::stringstream camera_hls_stringstream;
+			{ camera_hls_stringstream << local_device_url << "hls/8/index.m3u8?token=" << local_authorization; }
+			
+			  
+			// 替換所有出現的標記
+			File::replaceAll(file_content, replace_admin_phrase, local_login);
+			File::replaceAll(file_content, replace_password_phrase, local_password);
+			File::replaceAll(file_content, replace_local_authorization_phrase, local_authorization);
+			File::replaceAll(file_content, replace_camera_hls_phrase, camera_hls_stringstream.str());
+
+			res.set_content(file_content, "text/html");
+		}
+		else
+		{
+			file_content = "read file fail (utf8 format required";
+			res.set_content(file_content, "text/plain");
+		}
+		
+		printf("\n[TEST HTML PAGE] %sweb/playtest.html redirect to //web/playtest.html \n\n", local_device_url.c_str());
+	});
+
+	// web/index.html from: ./web/index.html 
+	svr.Get("/index", [=](const httplib::Request& /*req*/, httplib::Response& res) {
+
+		int nCode = 0;
+		std::string file_content;
+		if (nCode == File::readFileContent("./web/index.html", file_content))
+		{ 
+			res.set_content(file_content, "text/html");
+		}
+		else
+		{
+			file_content = "read file:./web/index.html fail (utf8 format required";
+			res.set_content(file_content, "text/plain");
+		}
+
+		printf("\n[TEST HTML PAGE] %sweb/playtest.html redirect to //web/playtest.html \n\n", local_device_url.c_str());
+		});
 	svr.set_pre_routing_handler(
 		[](const auto& req, auto& res) -> httplib::Server::HandlerResponse {
 			if (req.path == "/hello") { //全局處理路由
@@ -249,29 +315,8 @@ httplib::Server svr;
                         </html>
                         )";
 				cout << "the current page is basic on utf8" << endl;
-				const char* src_char = "Hello the world,您好，世界";
+				const char* src_char = "Hello the world!";
 				cout << "origin string: " << src_char << endl;
-
-#ifdef _WIN32
-				// windows default is gbk
-				/*string dst_str = httpserver::GbkToUtf8(src_char);
-				cout << "gbk to utf8: " << dst_str << endl;*/
-
-				string dst_str = src_char; //本來頁面是Utf8,並且要求主控台也是Utf8,所以無須轉碼。
-
-
-				string str_utf8 = httpserver::Utf8ToGbk(dst_str.c_str());
-				cout << "utf8 to gbk: " << str_utf8 << endl;
-#else
-				// unix default is utf8
-				char dst_gbk[1024] = { 0 };
-				Utf8ToGbkx(src_str, strlen(src_str), dst_gbk, sizeof(dst_gbk));
-				cout << "utf8 to gbk: " << dst_gbk << endl;
-
-				char dst_utf8[1024] = { 0 };
-				GbkToUtf8x(dst_gbk, strlen(dst_gbk), dst_utf8, sizeof(dst_utf8));
-				cout << "gbk to utf8: " << dst_utf8 << endl;
-#endif  
 
 				std::string stringToken = "$hello$";
 
@@ -288,13 +333,10 @@ httplib::Server svr;
 			}
 			return httplib::Server::HandlerResponse::Unhandled;
 		});
-#elif __linux__
-	// 请自行补充
-#endif
 
 	svr.Get("/hi", [](const httplib::Request& /*req*/, httplib::Response& res) {
 		res.set_content("Hello World!\n", "text/plain");
-		});
+	});
 
 	svr.Get("/slow", [](const httplib::Request& req, httplib::Response& res) {
 		std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -325,13 +367,13 @@ httplib::Server svr;
 		}
 		else {
 
-			std::string msg = "<p>User Authentic Status: <span "
-				"style='color:red;'>%d</span> </p> <p>不支持認證</p>";
-			const char* fmt = msg.c_str();
+			std::string msg = "<p>User Authentic Status (?token=...):<span"
+				"style='color:red;'><br>No Atuthentic : User Authentic Status:401</span> </p> <p>Unsupported Authentication!</p>";
+			const char* fmt = "No Atuthentic : User Authentic Status:401";
 			char buf[BUFSIZ];
 			res.status = 401;
 			snprintf(buf, sizeof(buf), fmt, res.status);
-			res.set_content("No Atuthentic : User Authentic Status:401", "text/html");
+			res.set_content(msg, "text/html");
 		}
 		});
 
@@ -342,6 +384,7 @@ httplib::Server svr;
 			allowCorsAccess(res);
 			printf("Video Options");
 		});
+	
 	// authentic with token
 	svr.Get("/video", [](const httplib::Request& req, httplib::Response& res) {
 		if (req.has_param("token")) {
@@ -358,7 +401,7 @@ httplib::Server svr;
 		else {
 
 			std::string msg = "<p>User Authentic Status: <span "
-				"style='color:red;'>%d</span> </p> <p>不支持認證</p>";
+				"style='color:red;'>%d</span> </p> <p>Unsupported Authentication!</p>";
 			const char* fmt = msg.c_str();
 			char buf[BUFSIZ];
 			res.status = 401;
@@ -366,11 +409,12 @@ httplib::Server svr;
 			res.set_content("No Atuthentic : User Authentic Status:401", "text/html");
 		}
 		});
+	
 	// 探测请求
 	svr.Options("/video", [](const httplib::Request& req, httplib::Response& res) {
 		// 允许跨域请求
 		allowCorsAccess(res);
-		});
+	});
 
 	// 探测请求
 	svr.Get("/play", [](const httplib::Request& req, httplib::Response& res) {
@@ -378,11 +422,12 @@ httplib::Server svr;
 		res.status = 200;
 		res.set_content("{'success':true,errorCode:-1}", "text/html");
 		});
+	
 	svr.Options("/play", [](const httplib::Request& req, httplib::Response& res) {
 		// 允许跨域请求
 		allowCorsAccess(res);
-		});
-
+	});
+	 
 	// 播放视频
 	//svr.Get("/play", [](const httplib::Request& req, httplib::Response& res) {
 	//	// 允许跨域请求
@@ -405,7 +450,7 @@ httplib::Server svr;
 
 	svr.Get("/dump", [](const httplib::Request& req, httplib::Response& res) {
 		res.set_content(dump_headers(req.headers), "text/plain");
-		});
+	});
 
 	svr.Get("/stop",
 		[&](const httplib::Request& /*req*/, httplib::Response& /*res*/) { svr.stop(); });
@@ -434,124 +479,130 @@ httplib::Server svr;
 		*/
 		// 允许跨域请求
 		allowCorsAccess(res);
-#ifdef _WIN32
-		res.set_content(transcoding::T2UTF8("add strategy success!").c_str(), "text/plain");
-#elif __linux__
-		// 请自行补充
-#endif
+		res.set_content("add strategy success!", "text/plain");
 	};
 
 	svr.Post("/updateStrategy", updateStrategy);
 
 	svr.set_logger([](const httplib::Request& req, const httplib::Response& res) {
-		if (res.status == 404 || res.status == 401 || res.status == 302 || res.status == 500)
+		if (res.status == 404 || res.status == 401 || res.status == 302 || res.status == 206 || res.status == 500)
 		{
-			printf("\n [http_server_logger] [log] [StatusCode=404||401||302||500] res.status = %d \n%s", res.status, log(req, res).c_str());
+			printf("\n[http_server_logger] [log] [StatusCode=404||401||302||206||500] res.status = %d \n\n%s", res.status, log(req, res).c_str());
 		}
 		else {
-			//printf("\n [http_server_logger] request_status_code = %d\n", res.status);
+			printf("\n[http_server_logger] request_status_code = %d\n", res.status);
 		}
-		});
+	});
 	 
+	//mount begin ---------------------------------------------
 	auto ret1 = svr.set_mount_point("/video", "./video");
 
 	if (!ret1) {
-		printf("./video does not exist! %s\n\n", "./video");
+		printf("http_server [%svideo] folder does not exist! %s\n\n", local_device_url.c_str(),"./video");
 	}
 	else {
-		printf("mount ./video success! %s\n\n", "./video");
+		printf("http_server mount [%svideo] success! %s\n\n", local_device_url.c_str(), "./video");
 	}
 
 	 
 	auto ret2 = svr.set_mount_point("/hls", "./hls");
 	if (!ret2) {
-		printf("./hls does not exist! %s\n\n", "./hls");
+		printf("[%shls] folder does not exist! %s\n\n", local_device_url.c_str(), "./hls");
 	}
 	else {
-		printf("mount ./hls success! %s\n\n", "./hls");
+		printf("http_server mount [%shls] success! %s\n\n", local_device_url.c_str(), "./hls");
 	}
 
-	// 探测请求
+	// 探测请求 格式 http://192.168.0.128:180/hls/12/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289
 	svr.Options("/hls", [](const httplib::Request& req, httplib::Response& res) {
 		// 允许跨域请求
-		allowCorsAccess(res);
-		printf("hls Options");
-		});
-
-	std::stringstream picture_path;
-	{ picture_path << File::GetWorkPath() << kSeprator << "picture"; }
+		allowCorsAccess(res); 
+	});
+	 
 	auto ret3 = svr.set_mount_point("/picture", "./picture");
 	if (!ret3) {
-		printf("./picture does not exist! %s\n\n", "./picture");
+		printf("http_server [%spicture] folder does not exist! %s\n\n", local_device_url.c_str(), "./picture");
 	}
 	else {
-		printf("mount ./picture success! %s\n\n", "./picture");
+		printf("http_server mount [%spicture] success! %s\n\n", local_device_url.c_str(), "./picture");
 	}
 	 
 	auto ret4 = svr.set_mount_point("/web", "./web");
 	if (!ret4) {
-		printf("./web does not exist! %s\n\n", "./web");
+		printf("[%sweb] folder does not exist! %s\n\n", local_device_url.c_str(), "./web");
 	}
 	else {
-		printf("mount ./web success!%s\n\n", "./web");
+		printf("http_server mount [%sweb] success!%s\n\n", local_device_url.c_str(), "./web");
 	}
-	/// mount end
+	/// mount end ---------------------------------------------
 
 	// 文件请求响应处理器(请求成功响应之前)
 	svr.set_file_request_handler(
 		[](const httplib::Request& req, httplib::Response& res) {
 			// 允许跨域请求
 			allowCorsAccess(res);
-			// 获取请求路径：/111/1/0/index.m3u8
+			// 获取请求路径：/hls/1/index.m3u8
 			std::string path = req.path;
-			//printf("\nfile_request path = %s\n\n", path.c_str());
+			printf("\n[funs::set_file_request_handler] file_request path = %s\n\n", path.c_str());
 
-			//// html/htm文件免用户校验
-			if (path.find(".html") != -1 || path.find(".htm") != -1)  //需要token
+			// html/htm文件是否免用户校验
+			if (path.find("index.html") != -1 || path.find("index.htm") != -1)  //html或htm : 需要用戶驗證 token的情況  
 			{
 				//開關token驗證
 				if (!UserPasswordValidByToken(req, res)) {
-					printf("request html reuired token ,html unauthorized!!!(set_file_request_handler %s)\n\n", path.c_str());
+					printf("request *.html or *.htm reuired token ,html unauthorized!!!(set_file_request_handler %s)\n\n", path.c_str());
 					return;
 				}
 			}
 
-			//// ts文件免用户校验
-			if (path.find(".ts") == -1)
-			{
+			// m3u8索引文件請求
+			if (path.find("index.m3u8") != -1) {
+
+				res.set_header("Content-Type", "application/vnd.apple.mpegurl"); 
 				if (!UserPasswordValidByToken(req, res)) {
-					printf(".ts unauthorized!!! set_file_request_handler %s\n\n", path.c_str());
-					printf("Content-Type video/mp2t %s\n\n", path.c_str());
+					printf(".ts unauthorized!!! fun::set_file_request_handler %s\n\n", path.c_str()); 
 					return;
 				}
 			}
 
-			//// mp4索引文件下载
-			if (path.find(".mp4") != -1) {
-				if (UserPasswordValidByToken(req, res) == false) {
-					printf("mp4 unauthorized!!! set_file_request_handler %s\n\n", path.c_str());
+			// ts文件免用户校验
+			// request status code = 206 部分請求成功 可能index0.ts包含的分片文件受限制
+			if (path.find(".ts") != -1)
+			{
+#ifdef DEBUG
+
+				printf("[ts file request] Content-Type video/mp2t %s\n\n", path.c_str());
+				 
+				//這段導致.ts文件不能放開訪問
+				/*if (!UserPasswordValidByToken(req, res)) {
+					printf(".ts unauthorized!!! fun::set_file_request_handler %s\n\n", path.c_str());
+					printf("*.ts unauthorized!!! Content-Type video/mp2t %s\n\n", path.c_str());
+					return;
+				}*/
+#endif
+			}
+
+			// flv/mp4索引文件下载
+			if (path.find(".mp4") != -1 || path.find(".flv") != -1) {
+				if (!UserPasswordValidByToken(req, res)) {
+					printf("mp4/flv unauthorized!!! set_file_request_handler %s\n\n", path.c_str());
 					return;
 				}
-			}
-			////// m3u8索引文件下载
-			//if (path.find("index.m3u8") != -1) {  //path.npos
-			//	printf("Content-Type application/vnd.apple.mpegurl %s\n\n", path.c_str());
-			//	res.set_header("Content-Type", "application/vnd.apple.mpegurl");
-			//}
+			}  
 		});
 
-#ifdef _WIN32
 	// 错误处理
 	httplib::Server::Handler errorHandle = [](const auto& req, auto& res) {
-		auto fmt = "<p>Error Status: <span style='color:red;'>media server error: %d</span></p>";
-		char buf[BUFSIZ];
-		snprintf(buf, sizeof(buf), fmt, res.status);
+
+		auto err_string = "\n[Media Http Server] http media server error status: %d %s ----------------------------------------\n";
+		char buf_screen[BUFSIZ];
+		snprintf(buf_screen, sizeof(buf_screen), err_string, res.status, Time::GetCurrentSystemTime());
+
+		auto fmt = "<p>Error Status: <span style='color:red;'>media server error: %d</span></p>"; 
+		char buf[BUFSIZ]; 
 		res.set_content(buf, "text/html");
 	};
 	svr.set_error_handler(errorHandle);
-#elif __linux__
-	// 请自行补充
-#endif
 
 	//---------------------------------------------------------------------------------------------
 	std::string local_ip = DEVICE_CONFIG.cfgDevice.device_ip;
@@ -560,76 +611,3 @@ httplib::Server svr;
 
 	return 0;
 }
-
-#ifdef _WIN32
-#include <windows.h>
-#include <string>
-
-string httpserver::GbkToUtf8(const char* src_str) {
-	int len = MultiByteToWideChar(CP_ACP, 0, src_str, -1, NULL, 0);
-	wchar_t* wstr = new wchar_t[len + 1];
-	memset(wstr, 0, len + 1);
-	MultiByteToWideChar(CP_ACP, 0, src_str, -1, wstr, len);
-	len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-	char* str = new char[len + 1];
-	memset(str, 0, len + 1);
-	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, NULL, NULL);
-	string strTemp = str;
-	if (wstr) delete[] wstr;
-	if (str) delete[] str;
-	return strTemp;
-}
-
-string httpserver::Utf8ToGbk(const char* src_str) {
-	int len = MultiByteToWideChar(CP_UTF8, 0, src_str, -1, NULL, 0);
-	wchar_t* wszGBK = new wchar_t[len + 1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, src_str, -1, wszGBK, len);
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char* szGBK = new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
-	string strTemp(szGBK);
-	if (wszGBK) delete[] wszGBK;
-	if (szGBK) delete[] szGBK;
-	return strTemp;
-}
-
-#else
-#include <iconv.h>
-#include <string.h>
-int httpserver::GbkToUtf8(char* str_str, size_t src_len, char* dst_str, size_t dst_len) {
-	iconv_t cd;
-	char** pin = &str_str;
-	char** pout = &dst_str;
-
-	cd = iconv_open("utf8", "gbk");
-	if (cd == 0) return -1;
-	memset(dst_str, 0, dst_len);
-	if (iconv(cd, pin, &src_len, pout, &dst_len) == -1) return -1;
-	iconv_close(cd);
-	 
-	dst_str = new char('\0');  // 創建一個包含空字符的 char* 對象
-	pout = &dst_str;  // 將指向 char* 的指針賦值給 char**
-
-	return 0;
-}
-
-int httpserver::Utf8ToGbk(char* src_str, size_t src_len, char* dst_str, size_t dst_len) {
-	iconv_t cd;
-	char** pin = &src_str;
-	char** pout = &dst_str;
-
-	cd = iconv_open("gbk", "utf8");
-	if (cd == 0) return -1;
-	memset(dst_str, 0, dst_len);
-	if (iconv(cd, pin, &src_len, pout, &dst_len) == -1) return -1;
-	iconv_close(cd);
-
-	dst_str = new char('\0');  // 創建一個包含空字符的 char* 對象
-	pout = &dst_str;  // 將指向 char* 的指針賦值給 char**
-
-	return 0;
-}
-
-#endif

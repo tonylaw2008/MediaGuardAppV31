@@ -3,6 +3,7 @@
 #include "StreamManager.h" 
 #include "RtspStreamHandle.h" 
 #include "ManagerController.h"
+#include <Common/Cmd5.h>
 
 //test
 //#include "./interface/CameraMpeg.h" //CameraMpeg所有的CLOUD API基本放這裡
@@ -13,8 +14,7 @@ using namespace Stream;
 std::thread m_http_server;
 
 int main(int argc, char** argv)
-{  
-	
+{
 	//測試車牌配置節點 test============================================ 
 	/*auto permitedCamList = DEVICE_CONFIG.cfgCarPlateRecogBusiness.PermitedCamList;
 	for (auto item = permitedCamList.begin(); item != permitedCamList.end(); ++item)

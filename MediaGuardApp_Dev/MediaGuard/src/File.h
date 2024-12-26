@@ -219,6 +219,7 @@ public:
 		fs::path pathToCheck(directoryPath);
 		return fs::exists(pathToCheck) && fs::is_directory(pathToCheck);
 	}
+
 	/*
 	* support the json file reading
 	* 讀取配置文件 deviceconfig.json
@@ -266,6 +267,39 @@ public:
 		else {
 			fclose(fp);
 			return jsonString;
+		}
+	}
+
+	/*讀取文件內容*/
+	static int readFileContent(const std::string file_path, std::string& file_content)
+	{
+		std::ifstream file(file_path); // 打開 HTML 文件
+		if (!file) {
+			std::cerr << "\nCan't not open the file! "<< file_path  << std::endl;
+			return 1;
+		}
+		 
+		std::string line;
+
+		// 逐行讀取文件內容
+		while (std::getline(file, line)) {
+			file_content += line + "\n"; // 將每行添加到內容中
+		}
+
+		file.close(); // 關閉文件
+		 
+		// 輸出文件內容
+		//std::cout << "file_content:\n" << file_content << std::endl;
+
+		return 0;
+	}
+
+	// 定義一個函數來替換所有匹配的子字符串
+	static void replaceAll(std::string& str, const std::string& from, const std::string& to) {
+		size_t start_pos = 0;
+		while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+			str.replace(start_pos, from.length(), to);
+			start_pos += to.length(); // 移動到替換後的位置，避免死循環
 		}
 	}
 
@@ -318,6 +352,7 @@ public:
 			return filePath.generic_string();
 		}
 		catch (const std::exception& e) {
+			std::cout << "[EXCEPTION] func::ParseLocalPath exception:" << path_file_name << std::endl;
 			// 錯誤處理：如果發生異常，返回原始路徑
 			return path_file_name;
 		}

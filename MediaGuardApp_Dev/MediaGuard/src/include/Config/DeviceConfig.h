@@ -49,7 +49,7 @@ public:
 		bool device_is_online_always = false;
 		std::string user = "admin";
 		std::string password = "0192023A7BBD73250516F069DF18B500";
-		std::string password_format = "md5_32_upcase (default)";
+		std::string password_format = "md5_32_lower (default)";
 		/// <summary>
 		/// //訪問本地MdiaGuard(設備)API賬戶
 		/// </summary>
@@ -66,7 +66,7 @@ public:
 		/// 默認： admin:admin123 的 Authorization token = 4a6a6c7f2cdd12a826e2f15675a6c6ac
 		/// </summary>
 		std::string local_authorization = "4a6a6c7f2cdd12a826e2f15675a6c6ac";
-
+		std::string local_device_url = "http://192.168.0.128:180/";
 		std::string reamrks = "serial no is hamc by toll from STAR-LangMXcore password format is md5_32_upcase (default)";
 		std::string language_code = "hk";
 		void LoadDevFromJson(rapidjson::Value& value);
