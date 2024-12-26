@@ -1,5 +1,7 @@
 # 文件夾 SETUP_n_DEPLOY
 
+# 請查閱核心安裝與部署文件: SETUP_n_DEPLOY.MD
+
 # 如何部署和安裝系統環境
 
 當前文件夾的用途 : 
@@ -19,6 +21,8 @@
 **ENGLISH**: ------------------------------------------------------------------------------------------------------------------------
 
 # Folder SETUP_n_DEPLOY
+
+# Please review the core installation and configuration documentation : SETUP_n_DEPLOY.MD
 
 # How to deploy and install the system environment
 
