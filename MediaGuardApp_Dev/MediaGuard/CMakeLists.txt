@@ -123,7 +123,7 @@ include_directories(${PROJECT_INCLUDE_DIR})
 # include 3RDPARTY_INCLUDE
 include_directories(${3RDPARTY_INCLUDE}) 
 
-# Include directories LOCAL_SOURCES_DIR 
+# *.cpp Include directories LOCAL_SOURCES_DIR 
 file(GLOB  LOCAL_SOURCES_DIR
     "./src/*.cpp"
     "./src/hmac/*.cpp"
@@ -138,8 +138,7 @@ file(GLOB  LOCAL_SOURCES_DIR
     "./src/include/Http/*.cpp"
     "./src/include/Httplib/*.cpp"  
     "./src/log/*.cpp" 
-    "./src/util/*.cpp" 
-
+    "./src/util/*.cpp"
 )
 
 message(STATUS "\n================ LOCAL_SOURCES_DIR ============\n")
@@ -147,6 +146,7 @@ foreach(file ${LOCAL_SOURCES_DIR})
    message(${PROJECT_NAME} "*** LOCAL_SOURCES_DIR ***: ${file}") 
 endforeach() 
 
+# *.h Include directories LOCAL_SOURCES_DIR 
 file(GLOB LOCAL_HEADER_DIR 
     "./src/*.h"
     "./src//hmac/*.h"
@@ -161,7 +161,7 @@ file(GLOB LOCAL_HEADER_DIR
     "./src//interface/*.h"
     "./src/log/*.h" 
     "./src/util/*.h" 
-) 
+)
 message(STATUS "\n================ LOCAL_HEADER_DIR ============\n")
 foreach(file ${LOCAL_HEADER_DIR})
    message(${PROJECT_NAME} "*** GLOB  LOCAL_HEADER_DIR ***:: ${file}") 
