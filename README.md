@@ -2,31 +2,37 @@
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
-
+## 雲平台連接或獨立脫機運行
 
 **API 請查閱 ./MediaGuard_DOC/DVR開發相關的說明VER3.1_2024-12.doc**
 
 
 
-## 开发总结 
+## CMAKE項目的VS2022開發環境
+
+請查閱 ./MediaGuard_DOC/README_組件安裝.md
+
+
+
+## 開發備註 
 
 **2024-12-27** 
 
-旧版 windows 运作正常, 现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
+舊版 windows 運作正常, Linux版編譯通過,但是需要CUDA 顯卡硬件環境運行測試驗證 ,目標是: linux 穩定版.
 
 開發環境詳細備註需要參考: MediaGuard_DOC/README_安裝與部署.md
 
-1.openssl linux和windows 编译版本 
+1.openssl linux和windows 編譯版本
 
-2.curl 版本需要linux编译 主要用于 函數MD5 (curl 是一个http协议指令)
+2.curl 版本需要linux編譯 主要用於 函數MD5 (curl 是http協定指令)
 
-3.ffmpeg 问题:
-	ffmpeg编译的时候,需要选择CUDA,如果機器器没有就不选.
+3.ffmpeg 問題:
+	ffmpeg編譯的時候,需要選擇CUDA,如果機器器沒有就不選.
 
-​         HardAndSoftDecode_Ref.md 参考软解和硬解码.
+​         HardAndSoftDecode_Ref.md 參考軟解和硬解碼.
 
 ***
-## 代码结构 
+## 代碼結構
 
 **參考LowLevelAnalysic_MediaGuard.pdf  核心文件三个**     
 
@@ -75,7 +81,7 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
 1. CameraMpeg.cpp 主要是API 業務邏輯的操作 記錄媒體文件開始結速時間等等的操作
 
 ***
-## 开发与场景功能描述 
+## 開發與場景功能描述 
 
 ## 開發願景與目標: CCTV安防行業技術提供商與升級AI革命應用提供解決方案. 
 
@@ -84,31 +90,32 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
 1. 人脸识别/警报  
 1. 二维码识别/警报  
 1. 车牌识别/警报  
-1. 老鼠识别/警报  
+1. 鼠患识别/警报  
 1. 行为识别/警报 
 1. 入侵區域告警
 ***
 ## 功能  
 
- I:图片动态保存最近15分钟的图片，可配置保存硬盤選項,但內容隊列選項是固定的程序. 
+ I:图片动态內存隊列保存最近15分钟的图片，可配置保存硬盤選項,但內容隊列選項是固定的程序. 
  II:动态把Camera解码单元（RtspStreamHandle.cpp）的单元图片列表转移保存到全局列表（内存）以供识别业务处理。  
- III:实现MP4/FLV 动态保存 
+ III:实现MP4/FLV 持續保存 
 
 ***
  #全局设置 
  GlobalSetting  来自/conf/device.json 的全局配置。   
 
- 1. picRemainMinutes;设置保存的图片在硬盘缓存时长；  
+ 1. picRemainMinutes;设置保存的图片在硬盘缓存时长,默認十五分；  
+ 1. PictInfo pictInfo; 保存圖片信息結構體,包括Base64格式存儲隊列(m_listFrame)中
  1. videoRemainMinutes = 15; //无论超出容量限制都要最少保留15分钟的video，预设必须考虑最少可以存储15分钟的影片  
  1. HWDeviceType nHDType = kHWDeviceTypeNone; //硬件类型 默认是没有 
 ***
-## 操作方法备注
+## 操作方法備註
 
 ***
 ### 主控台操作
 
- 1. 增加Ctrl+c Ctrl+Break Enter 行为屏蔽（signal 监视）     
- 1. 只能输入exit退出
+ 1. 增加 Ctrl+c Ctrl+Break Enter 行為（signal 監視）
+ 1. 只能輸入exit退出
 
 ### WEB 頁面
 
@@ -119,3 +126,7 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
  	上述IP要根據實際部署調整.
 
 ​	
+
+## 網絡穿透
+
+實現雲平台與設備互訪
