@@ -1,4 +1,4 @@
-﻿# Media Guard App V3.1
+# Media Guard App V3.1
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
@@ -15,13 +15,13 @@
 
 **2024-11-20** 
 
-旧版 windows 运作正常, 现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
+旧版 windows 运作正常, Linux編譯正常，需要Linux下Nvidia顯卡測試一下，现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
 
 现在缺余下工作:
 
 1.openssl linux和windows 编译版本 
 
-2.curl 版本需要linux编译 主要用于 libcurlhelper.cpp 需要加载https证书的时候要用到openssl 和 curl (curl 是一个http协议指令)
+2.curl 版本需要linux编译 主要用于 libcurlhelper.cpp 需要目前MD5时候要用到openssl 和 curl (curl 是一个http协议指令)
 
 3.ffmpeg 问题:
 	ffmpeg编译的时候,需要选择CUDA,如果激器没有就不选.
