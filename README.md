@@ -1,36 +1,29 @@
-# Media Guard App V3.1
+﻿# Media Guard App V3.1
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
-**[NVR 錄像設備] 和 [一卡通 ACS] 混合功能版本**
+
 
 **API 請查閱 ./MediaGuard_DOC/DVR開發相關的說明VER3.1_2024-12.doc**
 
-## GIT 操作設置
 
-**忽略上存的文件夾 :** 
-.vs/
 
 ## 开发总结 
 
-**2024-11-20** 
+**2024-12-27** 
 
-旧版 windows 运作正常, Linux編譯正常，需要Linux下Nvidia顯卡測試一下，现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
+旧版 windows 运作正常, 现在目标是 Version 3.1 版本 ,目標是: linux 稳定版本.
 
-现在缺余下工作:
+開發環境詳細備註需要參考: MediaGuard_DOC/README_安裝與部署.md
 
 1.openssl linux和windows 编译版本 
 
-2.curl 版本需要linux编译 主要用于 libcurlhelper.cpp 需要目前MD5时候要用到openssl 和 curl (curl 是一个http协议指令)
+2.curl 版本需要linux编译 主要用于 函數MD5 (curl 是一个http协议指令)
 
 3.ffmpeg 问题:
-	ffmpeg编译的时候,需要选择CUDA,如果激器没有就不选.
+	ffmpeg编译的时候,需要选择CUDA,如果機器器没有就不选.
 
 ​         HardAndSoftDecode_Ref.md 参考软解和硬解码.
-
-4.EasyLogging++ 這個組件去掉,使用spdlog日志
-
-​	參考 MediaGuard_DOC/spdlog日志.md
 
 ***
 ## 代码结构 
@@ -53,16 +46,18 @@
 		m_pHandle = std::make_shared<AudioStreamHandle>();  //沒用到 Ignore
 		break;  
 	case kStreamTypeRtsp:  
-		m_pHandle = std::make_shared<RtspStreamHandle>();  
+		m_pHandle = std::make_shared<RtspStreamHandle>();   //RTSP解碼錄像單元 
 		break;  
 	default:  
 		m_pHandle = std::make_shared<RtspStreamHandle>();  
 		break;  
 	}
  ```
-## Struct StreamInfo 
+## StreamInfo 傳入參數結構體
 
-StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(結構體)。
+StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參數結構體)。
+
+同時在運行過程中賦值像素長寬等等鏡頭解碼參數出去外面
 
 	（\MediaGuard\StreamDefine.h）
 	1. 硬件解碼 (NVIDIA CUDA / INTEL ITEGRATE DISPLAY) 實例要修改對應參數 StreamInfo.nHDType 
@@ -81,8 +76,8 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(結�
 
 ***
 ## 开发与场景功能描述  
-1. 实现NVR录像 云存储  
-1. 各种识别业务与警报：  
+1. 目前實現**[NVR 錄像設備] **
+1. 解碼單元提供各种识别业务与警报的圖片以供調用：  
 1. 人脸识别/警报  
 1. 二维码识别/警报  
 1. 车牌识别/警报  
