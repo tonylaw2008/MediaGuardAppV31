@@ -116,6 +116,6 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
  	部署測試		 http://192.168.0.128:180/test    對應的實體文件: /web/index_templte.html 
  	跨域與登錄測試    /web/playtext.html  需要文件形式在瀏覽器打開
  	
- 	上述IP要根據部署實際調整.
+ 	上述IP要根據實際部署調整.
 
 ​	
