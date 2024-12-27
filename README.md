@@ -1,4 +1,4 @@
-﻿# Media Guard App V3.1
+# Media Guard App V3.1
 
 **X:\MediaGuardAppV31**   | GIT : MediaGuardAppV31
 
@@ -75,7 +75,10 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
 1. CameraMpeg.cpp 主要是API 業務邏輯的操作 記錄媒體文件開始結速時間等等的操作
 
 ***
-## 开发与场景功能描述  
+## 开发与场景功能描述 
+
+## 開發願景與目標: CCVV行業技術提供商與升級AI革命應用提供解決方案. 
+
 1. 目前實現**[NVR 錄像設備] **
 1. 解碼單元提供各种识别业务与警报的圖片以供調用：  
 1. 人脸识别/警报  
@@ -87,13 +90,13 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
 ***
 ## 功能  
 
- I:图片动态保存最近15分钟的图片，  
+ I:图片动态保存最近15分钟的图片，可配置保存硬盤選項,但內容隊列選項是固定的程序. 
  II:动态把Camera解码单元（RtspStreamHandle.cpp）的单元图片列表转移保存到全局列表（内存）以供识别业务处理。  
  III:实现MP4/FLV 动态保存 
 
 ***
  #全局设置 
- GlobalSetting  来自/conf/Config.json 的全局配置。   
+ GlobalSetting  来自/conf/device.json 的全局配置。   
 
  1. picRemainMinutes;设置保存的图片在硬盘缓存时长；  
  1. videoRemainMinutes = 15; //无论超出容量限制都要最少保留15分钟的video，预设必须考虑最少可以存储15分钟的影片  
@@ -109,7 +112,10 @@ StreamInfo 是傳入鏡頭對象(RtspStreamHandle.cpp)的參數對象結果(參�
 
 ### WEB 頁面
 
- 	/web/index.html 
- 	/web/playtext.html 跨域與登錄測試
+ 	HttpServer 測試 http://192.168.0.128:180/hello 
+ 	部署測試		 http://192.168.0.128:180/test    對應的實體文件: /web/index_templte.html 
+ 	跨域與登錄測試    /web/playtext.html  需要文件形式在瀏覽器打開
+ 	
+ 	上述IP要根據部署實際調整.
 
 ​	
