@@ -4,6 +4,7 @@
 #include "RtspStreamHandle.h" 
 #include "ManagerController.h"
 #include <Common/Cmd5.h>
+#include "stun/NatHeartBean.h"
 
 //test
 //#include "./interface/CameraMpeg.h" //CameraMpeg所有的CLOUD API基本放這裡
@@ -15,6 +16,11 @@ std::thread m_http_server;
 
 int main(int argc, char** argv)
 {
+	NatHeartBean natHeartBean;
+	natHeartBean.get_stun_ip();
+
+	system("pause");
+
 	//測試車牌配置節點 test============================================ 
 	/*auto permitedCamList = DEVICE_CONFIG.cfgCarPlateRecogBusiness.PermitedCamList;
 	for (auto item = permitedCamList.begin(); item != permitedCamList.end(); ++item)

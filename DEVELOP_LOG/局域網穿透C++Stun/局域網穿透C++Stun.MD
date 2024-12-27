@@ -1,6 +1,6 @@
 # 關於 c++ stun 局域網穿透 
 
-
+STUN（Session Traversal Utilities for NAT）是一种协议，用于帮助NAT（网络地址转换）后面的设备发现其公共IP地址和端口号，以便能够进行P2P通信。
 
 ## 局域網穿透步驟
 
@@ -70,3 +70,108 @@ telnet stun.l.google.com:19302   //參考這個 https://webrtc.org.cn/real-world
 如果你的網絡需要與外部互聯網進行通信（例如，訪問網站、下載文件等），那麼路由器的 NAT 功能是必須開啟的。如果你只是在局域網內部進行通信，則可以不使用 NAT，但這在大多數情況下並不常見。
 
 總結來說，對於大多數家庭和小型辦公室的路由器，開啟 NAT 是必要的，以確保正常的互聯網連接和安全性。
+
+
+
+## C# SERVER and C++ Client 實現
+
+客戶端使用 C++ std17 如何實現 , 雲平台服務器端使用c# 如何實現
+
+要在客戶端使用 C++ (C++17) 實現 STUN 協議，並在雲平台服務器端使用 C# 實現，您可以按照以下步驟進行：
+
+### 客戶端 (C++17)
+
+1. **選擇庫**：可以使用 `PJNATH` 或 `libnice` 等庫來實現 STUN 客戶端。如果您想從頭開始實現，可以參考 STUN 協議的 RFC 5389。
+
+2. **安裝庫**：
+   - 如果使用 `PJNATH`，可以從其 GitHub 頁面下載並按照說明進行編譯和安裝。
+   - 如果從頭實現，您需要使用 C++ 的 socket 編程來發送和接收 STUN 請求。
+
+3. **基本代碼範例**（使用 socket）：
+
+```cpp
+#include <iostream>
+#include <cstring>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+const char* STUN_SERVER_IP = "stun.l.google.com"; // STUN 伺服器 IP
+const int STUN_SERVER_PORT = 19302; // STUN 伺服器端口
+
+int main() {
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        std::cerr << "Failed to create socket." << std::endl;
+        return 1;
+    }
+
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(STUN_SERVER_PORT);
+    inet_pton(AF_INET, STUN_SERVER_IP, &server_addr.sin_addr);
+
+    // 構建 STUN 請求
+    // 此處省略請求的具體構建過程，請參考 RFC 5389
+
+    // 發送請求
+    sendto(sockfd, stun_request, request_length, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+
+    // 接收響應
+    char buffer[1024];
+    socklen_t addr_len = sizeof(server_addr);
+    recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, &addr_len);
+
+    // 處理響應
+    // 此處省略響應的解析過程
+
+    close(sockfd);
+    return 0;
+}
+```
+
+
+
+### 服務器端 (C#)
+
+1. **選擇庫**：可以使用 `SIPSorcery` 或其他支持 STUN 的庫。
+
+2. **安裝庫**：
+   
+   - 使用 NuGet 安裝 SIPSorcery：
+     ```
+     Install-Package SIPSorcery
+     ```
+   
+3. **基本代碼範例**：
+
+```csharp
+using System;
+using SIPSorcery.Net;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var stunServer = new StunClient();
+        var stunResult = stunServer.Query("stun.l.google.com", 19302);
+
+        if (stunResult != null)
+        {
+            Console.WriteLine($"Public IP: {stunResult.PublicIP}, Port: {stunResult.PublicPort}");
+        }
+        else
+        {
+            Console.WriteLine("STUN query failed.");
+        }
+    }
+}
+```
+
+### 總結
+
+1. 在客戶端使用 C++ 實現 STUN 請求，並解析響應。
+2. 在服務器端使用 C# 實現 STUN 伺服器，並處理來自客戶端的請求。
+
+這些範例只是基本的起點，實際實現中需要處理更多的細節，例如錯誤處理和協議的具體實現。您可以根據需要進一步擴展功能。
+

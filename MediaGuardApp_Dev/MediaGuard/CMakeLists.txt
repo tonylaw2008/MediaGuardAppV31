@@ -23,7 +23,7 @@ project(${PROJECT_NAME})
 
 set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_SOURCE_DIR})
  
-# ws2def.h重定义
+# ws2def.h重定义 
 if(WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  /DWIN32_LEAN_AND_MEAN")
 endif()
