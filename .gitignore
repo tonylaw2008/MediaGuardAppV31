@@ -2,6 +2,9 @@
 Other_ExcludeToGit/
 .vs/
 out/
+output/video/
+output/picture/
+output/hls/
 # Windows
 [Dd]esktop.ini
 Thumbs.db

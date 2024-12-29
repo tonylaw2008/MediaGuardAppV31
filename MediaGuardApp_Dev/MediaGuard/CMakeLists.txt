@@ -139,6 +139,7 @@ file(GLOB  LOCAL_SOURCES_DIR
     "./src/include/Httplib/*.cpp"  
     "./src/log/*.cpp" 
     "./src/util/*.cpp"
+    "./src/stun/*.cpp"
 )
 
 message(STATUS "\n================ LOCAL_SOURCES_DIR ============\n")
@@ -160,7 +161,8 @@ file(GLOB LOCAL_HEADER_DIR
     "./src//include/Httplib/*.h"
     "./src//interface/*.h"
     "./src/log/*.h" 
-    "./src/util/*.h" 
+    "./src/util/*.h"
+    "./src/stun/*.h"
 )
 message(STATUS "\n================ LOCAL_HEADER_DIR ============\n")
 foreach(file ${LOCAL_HEADER_DIR})

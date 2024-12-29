@@ -26,6 +26,11 @@
 
 namespace Service
 {
+	// 全局設備ID 指的是 LINUX 盒子/ WIN 盒子等 操作系統 載體平台的設備ID
+	// 使用設備序列號獲得
+	// 注意不要混淆是 鏡頭或者HIK 的 掛載設備的ID
+	// 是APPLICATION 應用程序運行下的 虛擬的DEVICE ID 
+	// static std::string DeviceId = "-";
 	/*
 	API JSON FORMAT
 		{
@@ -51,6 +56,23 @@ namespace Service
 		std::string FileFormat = "video/mpeg";
 		int64_t StartTimestamp = 0;
 		int64_t EndTimestamp = 0;
+	};
+	/* 更新設備公網IP到雲端 Request
+{
+    "deviceId":"3012",
+    "internetIp":"219.77.12.21",
+    "internetPort":"8080",
+    "localIp":"192.168.0.188",
+    "localPort":"8080"
+}
+*/
+	struct DeviceInterNetIpInfo
+	{ 
+		std::string deviceId;
+		std::string internetIp;
+		std::string internetPort;
+		std::string localIp;
+		std::string localPort;
 	};
 
 	/*
@@ -354,7 +376,11 @@ public:
 
 	bool camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::string& strResponse);
 
+	bool update_divice_internet_ip(Service::DeviceInterNetIpInfo& deviceInterNetIpInfo, std::string& strResponse);
+
 	bool camera_mpeg_to_json(Service::CameraMpegInfo& cameraMpegInfo, std::string& strRst);
+
+	bool device_internet_ip_info_to_json(Service::DeviceInterNetIpInfo& deviceInterNetIpInfo, std::string& strResult);
 
 	bool device_serial_no_input_to_json(Service::DeviceSerialNoInput& deviceSerialNoInput, std::string& strResult);
 

@@ -13,7 +13,7 @@
 #include <errno.h> 
 #include <signal.h>
 #include "StreamManager.h"
-
+#include "stun/NatHeartBean.h"
 #include "Common.h"
 
 #include <chrono>
@@ -62,6 +62,10 @@ public:
 	static void create_main_media_folder();
 
 	static void clearScreen();
+
+	//void heartbean_nat_internet_ip_run();
+
+	static void update_device_nat_internet_ip();
 	 
 	template<typename TP>
 	static std::time_t to_time_t(TP tp);

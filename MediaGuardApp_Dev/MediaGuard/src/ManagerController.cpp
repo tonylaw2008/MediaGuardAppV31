@@ -24,6 +24,7 @@ std::mutex g_mtLock;
 std::condition_variable g_cvCond;
 std::thread g_thRun;
 std::thread g_thPict;
+std::thread g_thInterneIp;
 std::thread g_thVideoStore;  
 
 typedef std::list<StreamMangement> StreamMgtList;
@@ -85,6 +86,7 @@ void run()
 	}
 }
 
+/* 每3分鐘運行一次 */
 void clean_picture_run()
 {
 	int clean_picture_circle_mins = 3; //每3分鐘運行一次
@@ -100,6 +102,25 @@ void clean_picture_run()
 			auto isExit = g_bExit.load(); 
 			return isExit;
 		});
+	}
+}
+
+/* 每16分鐘運行一次公網同步 */
+void heartbean_nat_internet_ip_run()
+{
+	int heartbean_circle_mins = 16; //每16分鐘運行一次公網同步
+#ifdef  DEBUG
+	heartbean_circle_mins = 1; //測試使用 1分鐘循環清理圖片
+#endif //  DEBUG
+
+	while (!g_bExit.load())
+	{
+		ManagerController::update_device_nat_internet_ip();
+		SHARED_LOCK(g_mtLock);
+		g_cvCond.wait_for(locker, std::chrono::minutes(heartbean_circle_mins), []() {
+			auto isExit = g_bExit.load();
+			return isExit;
+			});
 	}
 }
 
@@ -121,12 +142,14 @@ void clean_video_store_run()
 	}
 }
 
+
 void ManagerController::Init()
 {
 	if (!g_bInited.load()) {
 		  
 		g_thRun = std::thread(run);
 		g_thPict = std::thread(clean_picture_run);
+		g_thInterneIp = std::thread(heartbean_nat_internet_ip_run);
 		g_thVideoStore = std::thread(clean_video_store_run);
 
 		bool bInited = false;
@@ -339,7 +362,7 @@ void ManagerController::run_media_batch_list()
 
 	system("pause");
 }
-
+ 
 void ManagerController::Uninit()
 {
 	g_bExit.store(true);
@@ -349,6 +372,9 @@ void ManagerController::Uninit()
 
 	if (g_thPict.joinable())
 		g_thPict.join();
+	 
+	if (g_thInterneIp.joinable())
+		g_thInterneIp.join();
 
 	if (g_thVideoStore.joinable())
 		g_thVideoStore.join();
@@ -699,7 +725,6 @@ void ManagerController::signal_check_main()
 	};
 }
 
-
 /*主控台初始化顯示的系統環境信息與程序配置信息 例如 Device.json的設置*/
 void ManagerController::main_initialize()
 {
@@ -713,6 +738,24 @@ void ManagerController::main_initialize()
 
 	//系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
 #pragma region HeaderRegion 系統信息參考 SYSTEM INFORMATION REFERENCE 提供部署安裝的系統與設備信息
+	
+	//首次運行1次 更新主體設備公網IP到雲端
+	ManagerController::update_device_nat_internet_ip();
+
+	//公共IP查詢 Public internet IP Reference
+	std::cout << "\n===================== PUBLIC INTERNET IP REFERENCE =====================\n" << std::endl;
+	NatHeartBean natHeartBean;
+
+	std::string public_ip = natHeartBean.get_public_ip_by_curl();
+	std::string public_ip2 = natHeartBean.get_public_ip_by_curl_memory();
+	if (!public_ip.empty()) {
+		std::cout << "Public IP Method 1: " << public_ip << "------------------------------save to: ./public_ip_by_curl.txt " << std::endl;
+		std::cout << "Public IP Method 2: " << public_ip2 << std::endl;
+	}
+	else {
+		std::cout << "Failed to retrieve public IP." << std::endl;
+	}
+	 
 	 
 	//系統信息參考 System Information Reference
 	std::cout << "\n===================== SYSTEM INFORMATION REFERENCE =====================\n" << std::endl;
@@ -732,9 +775,12 @@ void ManagerController::main_initialize()
 		<< ((codec_version >> 8) & 0xFF) << "." // 次版本號
 		<< (codec_version & 0xFF) << "\n" << std::endl; // 修訂版本號
 
+#ifdef DEBUG
 	printf("avcodec_configuration details: \n%s\n\n", avcodec_configuration()); //解碼配置
+#endif // DEBUG
 
-	std::cout << "\n\n\nPRESS ENTER TO CONTINUE .......\n\n\n" << std::endl;
+	 
+	std::cout << "\n\n\nPRESS ENTER TO CONTINUE .......\n\n\n" << std::endl; 
 	char c1;
 	std::cin.get(c1);
 
@@ -784,7 +830,6 @@ void ManagerController::main_initialize()
 	ManagerController::create_main_media_folder();
 }
 
-
 /// <summary>
 /// 啟動 HttpServer
 /// </summary>
@@ -830,3 +875,52 @@ void ManagerController::clearScreen() {
 #endif
 }
  
+/* 獲取 設備對應的公網IP和端口 並且每15分鐘 同步心跳一次
+*  注意 這裡是應用程序運行的平台設備(如MediaGuard + Liux 合成成為設備) 不是APP 下掛的設備
+*/
+void ManagerController::update_device_nat_internet_ip()
+{ 
+	if (DEVICE_CONFIG.cfgDevice.device_is_online_always == false)
+	{
+		return;
+	}
+	 
+	CameraMpeg cameraMpeg;
+	NatHeartBean natHeartBean;
+	Service::DeviceInterNetIpInfo deviceInterNetIpInfo;
+
+	std::cout << "\n===================== CLOUD REGISTRATION MAIN DEVICE INFOMATION =====================\n" << std::endl;
+	
+	Service::DeviceDetails deviceDetails;
+	cameraMpeg.device_by_serial_no(deviceDetails);
+
+	if (deviceDetails.deviceId.length() > 0)
+	{
+		std::cout << "\nMAIN DEVICE INFO OF CLOUD REGISTRATION:------------------------------------"<< Time::GetCurrentSystemTime()<< "\n" << std::endl;
+		std::cout << "MAIN DEVICE_SERIAL_NO REGISTED : " << deviceDetails.deviceSerialNo << "\n" << std::endl;
+		std::cout << "MAIN DEVICE_ID REGISTED: " << deviceDetails.deviceId << "\n" << std::endl;
+		std::cout << "MAIN DEVICE_NAME REGISTED : " << deviceDetails.deviceName << "\n" << std::endl;
+		 
+		deviceInterNetIpInfo.deviceId = deviceDetails.deviceId; 
+		deviceInterNetIpInfo.internetIp = natHeartBean.get_public_ip_by_curl_memory();
+		std::cout << "MAIN DEVICE PUBLIC INTERNET IP: " << deviceInterNetIpInfo.internetIp << "\n" << std::endl;
+		deviceInterNetIpInfo.localIp = DEVICE_CONFIG.cfgDevice.device_ip;
+		deviceInterNetIpInfo.localPort = to_string(DEVICE_CONFIG.cfgDevice.device_port);
+		std::cout << "MAIN DEVICE LOCAL IP AND PORT: " << deviceInterNetIpInfo.internetIp << ":" << deviceInterNetIpInfo.localPort << "\n" << std::endl;
+
+		// 不使用STUN協議的路由端口,
+		// 而是通過路由器設置的 NAT 轉發配置設備的端口要與路由器轉發的端口一致
+		// 例如: 默認配置的端口是 180 則 路由器配置的轉發端口要和這個本地端口一致:180
+		// 如果使用STUN協議 則需要 整體轉移到使用 STUN 技術規則
+		deviceInterNetIpInfo.internetPort = to_string(DEVICE_CONFIG.cfgDevice.device_port);
+
+		std::string strResponse;
+		cameraMpeg.update_divice_internet_ip(deviceInterNetIpInfo, strResponse);
+	}
+	else {
+		std::cout << "\nMAIN DEVICE IS REQUIRED TO REGIST ON THE CLOUD FIRST!!!!!!!!! " <<  "\n" << std::endl;
+	}
+	 
+	
+
+}

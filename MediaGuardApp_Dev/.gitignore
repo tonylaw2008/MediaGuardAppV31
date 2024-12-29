@@ -3,6 +3,7 @@ Other_ExcludeToGit/
 .vs/
 out/
 output/
+build/
 # Windows
 [Dd]esktop.ini
 Thumbs.db

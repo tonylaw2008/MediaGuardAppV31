@@ -85,12 +85,18 @@ public:
 	int DownloadBigFile(const HttpPara& paraHttp, const std::string& strPath = "", const std::string& strFileName = "", int nThread = 1);
 
 private:
+
 	void get_header_type(int nType, std::string& strHeader);
+
 	curl_slist* set_header(const std::vector<std::string>& vecHeaders);
+
 	int64_t get_download_file_length(const HttpPara& paraHttp, std::string& strRemoteFileName);
+
 	std::string generate_filename(const std::string& strUrl, const std::string& strCustonFile, const std::string& strFileInfo);
 	void do_download(void* pData);
+
 	void notify_download();
+
 	long get_local_file_length(const std::string& strFile);
 
 	std::string str_to_utf8(const std::string& str);

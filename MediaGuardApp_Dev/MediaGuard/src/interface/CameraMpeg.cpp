@@ -166,6 +166,7 @@ void CameraMpeg::camera_mpeg_add(Service::CameraMpegInfo& cameraMpegInfo)
 	}
 }
 
+/* 添加錄像文件信息到雲端 RtspStreamHandle.cpp 每x分鐘解碼保存的mp4/flv文件信息 */
 bool CameraMpeg::camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::string& strResponse)
 { 
 	std::stringstream ss;
@@ -207,7 +208,57 @@ bool CameraMpeg::camera_mpeg_add2(Service::CameraMpegInfo& cameraMpegInfo, std::
 	if (nCode != CP_OK)
 	{
 		//LOG(ERROR) << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse;
-		std::cout << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse << std::endl;
+		std::cout << "camera_mpeg_add post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON RESULT :\n" << strMsg << "\n" << strResponse << std::endl;
+	}
+
+	return true;
+}
+
+/* 更新設備公網IP到雲端 Request 
+{
+    "deviceId":"3012",
+    "internetIp":"219.77.12.21",
+    "internetPort":"8080",
+    "localIp":"192.168.0.188",
+    "localPort":"8080"
+} 
+*/
+bool CameraMpeg::update_divice_internet_ip(Service::DeviceInterNetIpInfo& deviceInterNetIpInfo, std::string& strResponse)
+{
+	std::stringstream ss;
+	{
+		ss << DEVICE_CONFIG.cfgHttpServer.url << DEVICE_CONFIG.cfgDevice.language_code << "/Device/UpdateDiviceInternetIp";
+	}
+	std::string strMsg;
+	LibcurlHelper clientCurl;
+	HttpPara para;
+	para.strUrl = ss.str();
+	para.nConnectTimeout = 1000;
+	para.nTransTimeout = 3000;
+	  
+	std::string bear_token;  
+	bool succ = request_token(bear_token);
+	if (!succ)
+	{
+		//LOG(TRACE) << "UpdateDiviceInternetIp::get_api_token " << succ << " FAIL";
+		std::cout << "UpdateDiviceInternetIp::get_api_token " << succ << " FAIL" << std::endl;
+		return false;
+	}
+	para.Authorization = bear_token;
+
+	bool mpeg_to_json_succ = device_internet_ip_info_to_json(deviceInterNetIpInfo, strMsg);
+	if (!mpeg_to_json_succ)
+	{
+		//LOG(TRACE) << "UpdateDiviceInternetIp::camera_mpeg_to_json " << mpeg_to_json_succ << " FAIL";
+		std::cout << "UpdateDiviceInternetIp::camera_mpeg_to_json " << mpeg_to_json_succ << " FAIL" << std::endl;
+		return false;
+	}
+	int nCode = clientCurl.Post(para, strMsg, strResponse);
+
+	if (nCode != CP_OK)
+	{
+		//LOG(ERROR) << "UpdateDiviceInternetIp post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON \n" << strMsg << "\n" << strResponse;
+		std::cout << "UpdateDiviceInternetIp post resturn error code: " << nCode << "\n" << para.strUrl << "\n POST JSON  RESULT :\n" << strMsg << "\n" << strResponse << std::endl;
 	}
 
 	return true;
@@ -272,6 +323,45 @@ bool CameraMpeg::camera_mpeg_to_json(Service::CameraMpegInfo& cameraMpegInfo, st
 		endTimestampVal.SetInt64(cameraMpegInfo.EndTimestamp);
 		doc.AddMember("endTimestamp", endTimestampVal, typeAllocate);
 
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer>  writer(buffer);
+		doc.Accept(writer);
+		strResult = buffer.GetString();
+		return true;
+	}
+	catch (std::exception& e)
+	{
+		//LOG(ERROR) << "[CameraMpeg::camera_mpeg_to_json] " << e.what() << std::endl;
+		std::cout << "[CameraMpeg::camera_mpeg_to_json] " << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool CameraMpeg::device_internet_ip_info_to_json(Service::DeviceInterNetIpInfo& deviceInterNetIpInfo, std::string& strResult)
+{
+	try
+	{
+		rapidjson::Document doc(rapidjson::kObjectType);
+		rapidjson::Document::AllocatorType& typeAllocate = doc.GetAllocator();
+
+		//1 deviceId
+		rapidjson::Value deviceIdVal;  
+		doc.AddMember("deviceId", rapidjson::Value(deviceInterNetIpInfo.deviceId.c_str(), typeAllocate), typeAllocate);
+
+		//2 internetIp
+		rapidjson::Value cameraIdVal; 
+		doc.AddMember("internetIp", rapidjson::Value(deviceInterNetIpInfo.internetIp.c_str(), typeAllocate), typeAllocate);
+
+		//3 internetPort
+		doc.AddMember("internetPort", rapidjson::Value(deviceInterNetIpInfo.internetPort.c_str(), typeAllocate), typeAllocate);
+
+		//4 localIp
+		rapidjson::Value IsLocalIpVal;
+		doc.AddMember("localIp", rapidjson::Value(deviceInterNetIpInfo.localIp.c_str(), typeAllocate), typeAllocate);
+
+		//5 localPort
+		doc.AddMember("localPort", rapidjson::Value(deviceInterNetIpInfo.localPort.c_str(), typeAllocate), typeAllocate);
+		  
 		rapidjson::StringBuffer buffer;
 		rapidjson::Writer<rapidjson::StringBuffer>  writer(buffer);
 		doc.Accept(writer);
@@ -606,6 +696,9 @@ bool CameraMpeg::camera_list_input_to_json(Service::CameraListInput& input, std:
 /*
   /{Language}/Device/GetMainComBySerialNo/{SerialNo}
   获取设备详情 并返回 DeviceDetails 结构体
+  這裡是獲取系統載體的設備明細 不是掛載的設備
+  設備序列號來自 DEVICE_CONFIG.cfgDevice.device_serial_no
+  注意 這裡是應用程序運行的平台設備(如MediaGuard + Liux 合成成為設備) 不是APP 下掛的設備
 */
 bool CameraMpeg::device_by_serial_no(Service::DeviceDetails& deviceDetails)
 {
@@ -917,8 +1010,6 @@ void CameraMpeg::get_stream_info(Service::StreamInfoForApi& streamInfoForApi, St
 	infoStream.nAudioIndex = streamInfoForApi.nAudioIndex;						//No.16  
 	infoStream.nRefCount = streamInfoForApi.nRefCount;							//No.17
 }
-
-
 
 /// <summary>
 /// 车牌识别业务 提交需要校测的图片到AI 车牌识别并返回结果，判断精确率高于预设的则POST到CarParking_CMS Web 服务器平台
