@@ -1,55 +1,57 @@
-#include "NatHeartBean.h"
+ï»¿#include "NatHeartBean.h"
 
 NatHeartBean::~NatHeartBean()
 {
-    // ªRºc¨ç¼Æ
+    // ææ§‹å‡½æ•¸
 }
 
 NatHeartBean::NatHeartBean()
 {
-    // ºc³y¨ç¼Æ
+    // æ§‹é€ å‡½æ•¸
 } 
  
 
 /*
-* ¶}µo»¡©ú: ¥Ø«e
+* é–‹ç™¼èªªæ˜ 
+* https://arthurchiao.art/blog/how-nat-traversal-works-zh/ â˜…â˜…â˜…â˜…â˜…å…¥é–€å¿…è®€
+* [è¯‘] NAT ç©¿é€æ˜¯å¦‚ä½•å·¥ä½œçš„ï¼šæŠ€æœ¯åŸç†åŠä¼ä¸šçº§å®è·µ
+* 
 */
-
-
-// Àò¨ú¥»¦aInternet IP ©Mºİ¤f // STUN NAT ¥Ø«e¦³ÂI°İÃD
+ 
+// ç²å–æœ¬åœ°Internet IP å’Œç«¯å£ // STUN NAT ç›®å‰æœ‰é»å•é¡Œ
 void NatHeartBean::get_local_internet_ip_and_port(char* &local_ip, int &local_port) {
      
-    char local_internet_ip[INET_ADDRSTRLEN]; // ©w¸q local_internet_ip
-    unsigned short local_internet_port; // ©w¸q local_port
+    char local_internet_ip[INET_ADDRSTRLEN]; // å®šç¾© local_internet_ip
+    unsigned short local_internet_port; // å®šç¾© local_port
     
-    // ³Ğ«Ø¤@­Ó UDP socket
+    // å‰µå»ºä¸€å€‹ UDP socket
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         std::cerr << "Failed to create socket." << std::endl;
         return;
     }
 
-    // ³]¸m¥»¦a¦a§}µ²ºc
+    // è¨­ç½®æœ¬åœ°åœ°å€çµæ§‹
     struct sockaddr_in local_internet_addr;
     memset(&local_internet_addr, 0, sizeof(local_internet_addr));
     local_internet_addr.sin_family = AF_INET;
-    local_internet_addr.sin_port = 0; // Åı¨t²Î¦Û°Ê¤À°tºİ¤f
-    local_internet_addr.sin_addr.s_addr = htonl(INADDR_ANY); // ¸j©w¨ì©Ò¦³¥i¥Î±µ¤f
+    local_internet_addr.sin_port = 0; // è®“ç³»çµ±è‡ªå‹•åˆ†é…ç«¯å£
+    local_internet_addr.sin_addr.s_addr = htonl(INADDR_ANY); // ç¶å®šåˆ°æ‰€æœ‰å¯ç”¨æ¥å£
      
-    // Àò¨ú¸j©wªººİ¤f
+    // ç²å–ç¶å®šçš„ç«¯å£
     socklen_t addr_len = sizeof(local_internet_addr);
     if (bind_socket(sockfd, (struct sockaddr*)&local_internet_addr, sizeof(local_internet_addr)) < 0) {
         std::cerr << "Failed to bind socket." << std::endl;
 
 #ifdef _WIN32
-        closesocket(sockfd); // ¦b Windows ¤¤¨Ï¥Î closesocket
+        closesocket(sockfd); // åœ¨ Windows ä¸­ä½¿ç”¨ closesocket
 #else
-        close(sockfd); // ¦b Linux ¤¤¨Ï¥Î close
+        close(sockfd); // åœ¨ Linux ä¸­ä½¿ç”¨ close
 #endif
         return;
     }
      
-    // Àò¨ú¥»¾÷ IP ¦a§}©Mºİ¤f
+    // ç²å–æœ¬æ©Ÿ IP åœ°å€å’Œç«¯å£
     inet_ntop(AF_INET, &local_internet_addr.sin_addr, local_internet_ip, sizeof(local_internet_ip));
     local_internet_port = ntohs(local_internet_addr.sin_port);
 
@@ -58,37 +60,39 @@ void NatHeartBean::get_local_internet_ip_and_port(char* &local_ip, int &local_po
     std::cout << "local_internet_port: " << local_internet_port << std::endl;
 #endif // DEBUG
      
-    // ÀË¬d¬O§_¬O¦³®Äªº¤¬Ápºô IP
+    // æª¢æŸ¥æ˜¯å¦æ˜¯æœ‰æ•ˆçš„äº’è¯ç¶² IP
     if (strcmp(local_internet_ip, "127.0.0.1") == 0 ||
         strncmp(local_internet_ip, "10.", 3) == 0 ||
         strncmp(local_internet_ip, "172.", 4) == 0 ||
         strncmp(local_internet_ip, "192.168.", 8) == 0) {
         std::cerr << "Obtained a private or loopback IP: " << local_internet_ip << std::endl;
-        // ®Ú¾Ú»İ¨D³B²z¨p¦³©Î¦^Àô¦a§}
+        // æ ¹æ“šéœ€æ±‚è™•ç†ç§æœ‰æˆ–å›ç’°åœ°å€
     }
     else {
-        // ¤À°t¤º¦s¨Ã«ş¨© INTERNET IP ¦a§} 
+        // åˆ†é…å…§å­˜ä¸¦æ‹·è² INTERNET IP åœ°å€ 
         strcpy(local_ip, local_internet_ip);
         local_port = local_internet_port;
     }
      
-    // Ãö³¬ socket
+    // é—œé–‰ socket
 #ifdef _WIN32
     closesocket(sockfd);
 #else
-   close(sockfd); // Ãö³¬ socket ¥y¬`
+   close(sockfd); // é—œé–‰ socket å¥æŸ„
 #endif
 }
 
-// ¥]¸Ë bind ¨ç¼Æ Á×§Ksocketªºbind¨ç¼Æ¦WºÙ½Ä¬ğ
+// åŒ…è£ bind å‡½æ•¸ é¿å…socketçš„bindå‡½æ•¸åç¨±è¡çª
 int  NatHeartBean::bind_socket(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     return ::bind(sockfd, addr, addrlen);
 }
 
-// Àò¨ú STUN ¦øªA¾¹ªº IP ©Mºİ¤f
-void NatHeartBean::get_server_internet_ip(char*& stun_server_ip, int& stun_server_port) {
+// ç²å– STUN ä¼ºæœå™¨çš„ IP å’Œç«¯å£ 2024-12-30
+// èª¿è©¦å¯ä»¥ç²å¾— stun_server_ip = 118.90.3.42 ä½†ä¸æ˜¯æœ¬å…¬ç¶²çš„IP æ‡‰è©²æ˜¯stun Serverçš„ å¯èƒ½buffer[] æˆªå–ä¸å°æ‡‰çš„åœ°æ–¹
 
-    // ³Ğ«Ø STUN ½Ğ¨D
+void NatHeartBean::get_server_internet_ip_port(char*& stun_server_ip, int& stun_server_port) {
+
+    // å‰µå»º STUN è«‹æ±‚
     create_stun_request();
 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -102,77 +106,96 @@ void NatHeartBean::get_server_internet_ip(char*& stun_server_ip, int& stun_serve
     hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP
 
-    // ¸ÑªR¥D¾÷¦W
-    if (getaddrinfo(STUN_SERVER_IP, nullptr, &hints, &res) != 0) {
+    // è§£æä¸»æ©Ÿå
+    if (getaddrinfo(STUN_SERVER, nullptr, &hints, &res) != 0) {
         std::cerr << "Failed to resolve hostname." << std::endl;
         return;
     }
 
-    // ±N¸ÑªRªº¦a§}³]¸m¨ì server_addr ¤¤
+    // å°‡è§£æçš„åœ°å€è¨­ç½®åˆ° server_addr ä¸­
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(STUN_SERVER_PORT);
     server_addr.sin_addr = ((struct sockaddr_in*)res->ai_addr)->sin_addr;
-    // ÄÀ©ñ¸ê·½
+    // é‡‹æ”¾è³‡æº
     freeaddrinfo(res);
   
-	// ±N STUN ¦øªA¾¹ªº IP ©Mºİ¤f³]¸m¨ì server_addr ¤¤
-    inet_pton(AF_INET, STUN_SERVER_IP, &server_addr.sin_addr);
+	// å°‡ STUN ä¼ºæœå™¨çš„ IP å’Œç«¯å£è¨­ç½®åˆ° server_addr ä¸­
+    inet_pton(AF_INET, STUN_SERVER, &server_addr.sin_addr);
      
-    // µo°e½Ğ¨D 
+    // ç™¼é€è«‹æ±‚ 
     sendto(sockfd, reinterpret_cast<const char*>(stun_request), request_length,  0, (struct sockaddr*)&server_addr, sizeof(server_addr));
      
-    // ±µ¦¬ÅTÀ³
+    // æ¥æ”¶éŸ¿æ‡‰
     char buffer[1024];
+    // æ„é€  STUN ç»‘å®šè¯·æ±‚
+    memset(buffer, 0, sizeof(buffer));
+    //---------------------------------------------------
+    buffer[0] = (STUN_BINDING_REQUEST >> 8) & 0xFF;
+    buffer[1] = STUN_BINDING_REQUEST & 0xFF;
+    buffer[2] = 0x00; // äº‹åŠ¡ ID
+    buffer[3] = 0x00; // äº‹åŠ¡ ID
+    buffer[4] = 0x00; // äº‹åŠ¡ ID
+    buffer[5] = 0x00; // äº‹åŠ¡ ID
+    buffer[6] = 0x00; // äº‹åŠ¡ ID
+    buffer[7] = 0x00; // äº‹åŠ¡ ID
+    buffer[8] = 0x00; // äº‹åŠ¡ ID
+    buffer[9] = 0x00; // äº‹åŠ¡ ID
     socklen_t addr_len = sizeof(server_addr);
 
     struct timeval timeout;
-    timeout.tv_sec = 5; // ¶W®É®É¶¡¡A³æ¦ì¬°¬í
-    timeout.tv_usec = 0; // ·L¬í
+    timeout.tv_sec = 5; // è¶…æ™‚æ™‚é–“ï¼Œå–®ä½ç‚ºç§’
+    timeout.tv_usec = 0; // å¾®ç§’
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout)); 
     size_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&server_addr, &addr_len);
 
     if (recv_len < 0) {
-        perror("recvfrom failed");
-        // ³B²z¿ù»~
+        perror("\nrecvfrom failed\n");
+        // è™•ç†éŒ¯èª¤
     }
     else {
-        // ¥´¦L±µ¦¬¨ìªº buffer ¤º®e
-        std::cout << "[Stun Protocol] Receive the socket data: recv_len = "<< recv_len <<"\n" << std::endl;
-		//¤º®e¤Ó¤j ¤£¥´¦L
+        // æ‰“å°æ¥æ”¶åˆ°çš„ buffer å…§å®¹
+        std::cout << "\n[func::get_server_internet_ip][stun Protocol] receive the socket data: recv_len = "<< recv_len <<"\n" << std::endl;
+		//å…§å®¹å¤ªå¤§ ä¸æ‰“å°
        /* for (size_t i = 0; i < recv_len; ++i) {
             printf("%02x ", static_cast<unsigned char>(buffer[i]));
         }*/
     }
 
-    // °²³] buffer ¬O±µ¦¬¨ìªºÅTÀ³
+    // å‡è¨­ buffer æ˜¯æ¥æ”¶åˆ°çš„éŸ¿æ‡‰
     if (recv_len > 0) {
          
         char c_server_ip[INET_ADDRSTRLEN]; 
        
-        // ½T«O±µ¦¬¨ìªº¼Æ¾Ú¨¬°÷ªø
-        if (recv_len >= 20) { // STUN ®ø®§ªº³Ì¤pªø«×
-            // ÀË¬d®ø®§Ãş«¬©M¼Ğ»x
-            uint16_t message_type = (buffer[0] << 8) | buffer[1];
-            if (message_type == 0x0101) { // 0x0101 ¬O¦¨¥\ÅTÀ³ªº®ø®§Ãş«¬
-                // ´£¨ú Mapped Address
-                uint16_t attribute_type = (buffer[28] << 8) | buffer[29]; // °²³] Mapped Address ¦b²Ä 28 ©M 29 ¦r¸`
-                uint16_t address_length = (buffer[30] << 8) | buffer[31]; // ¦a§}ªø«×
-                uint32_t client_ip_addr = *(uint32_t*)&buffer[32]; // IP ¦a§}
-                unsigned short u_server_port = ntohs(*(uint16_t*)&buffer[36]); // ºİ¤f 
-                inet_ntop(AF_INET, &client_ip_addr, c_server_ip, sizeof(c_server_ip));
-                std::cout << "stun_server_ip: " << c_server_ip << std::endl;
-                std::cout << "stun_server_port: " << u_server_port << std::endl;
-            }
+        // è§£æ STUN å“åº”
+        if (buffer[0] == 0x01 && buffer[1] == 0x01) {
+            // å…¬ç½‘ IP å’Œç«¯å£åœ¨å“åº”ä¸­
+            uint32_t mappedAddress = (buffer[28] << 24) | (buffer[29] << 16) | (buffer[30] << 8) | buffer[31];
+            uint16_t mappedPort = (buffer[32] << 8) | buffer[33];
+
+            // è¾“å‡ºå…¬ç½‘ IP å’Œç«¯å£
+            struct in_addr ipAddr;
+            ipAddr.s_addr = mappedAddress;
+
+            stun_server_ip = inet_ntoa(ipAddr);
+            int ipublic_port = ntohs(mappedPort);
+            std::string s_public_port = std::to_string(ipublic_port).c_str();
+
+            printf("\n[fun::get_server_internet_ip] [printf] Public IP: %s , Port: %s\n", stun_server_ip, s_public_port.c_str());
+
+            std::cout << "\n[fun::get_server_internet_ip] Public IP: " << stun_server_ip << ", Port: " << ipublic_port << std::endl;
         }
+        else {
+            std::cout << "\n[func::get_server_internet_ip] Invalid STUN response.\n" << std::endl;
+        } 
     }
      
 
 #ifdef _WIN32
     closesocket(sockfd);
 #else
-    close(sockfd); // Ãö³¬ socket ¥y¬`
+    close(sockfd); // é—œé–‰ socket å¥æŸ„
 #endif
 
     return;
@@ -180,62 +203,62 @@ void NatHeartBean::get_server_internet_ip(char*& stun_server_ip, int& stun_serve
 
 // ...
 void NatHeartBean::create_stun_request() {
-    // ²MªÅ½Ğ¨D
+    // æ¸…ç©ºè«‹æ±‚
     memset(stun_request, 0, STUN_REQUEST_SIZE);
 
-    // ³]¸m½Ğ¨Dªº¼ĞÀY
-    // stun_request ªºµ²ºc³]¸m¦p¤U¡G
-    // stun_request[0]¡Gª©¥»©MÃş«¬
-    // stun_request[1]¡G¤èªk½X¡]Binding Request¡^
-    // stun_request[2] ©M stun_request[3]¡G®ø®§ªø«×¡]¦¹³B³]¸m¬° 0¡A¦]¬°¨S¦³ÃB¥~Äİ©Ê¡^
-    // stun_request[8]¡GÃÑ§O²Åªº¶}©l¦ì¸m
+    // è¨­ç½®è«‹æ±‚çš„æ¨™é ­
+    // stun_request çš„çµæ§‹è¨­ç½®å¦‚ä¸‹ï¼š
+    // stun_request[0]ï¼šç‰ˆæœ¬å’Œé¡å‹
+    // stun_request[1]ï¼šæ–¹æ³•ç¢¼ï¼ˆBinding Requestï¼‰
+    // stun_request[2] å’Œ stun_request[3]ï¼šæ¶ˆæ¯é•·åº¦ï¼ˆæ­¤è™•è¨­ç½®ç‚º 0ï¼Œå› ç‚ºæ²’æœ‰é¡å¤–å±¬æ€§ï¼‰
+    // stun_request[8]ï¼šè­˜åˆ¥ç¬¦çš„é–‹å§‹ä½ç½®
 	//--------------------------------------------------------------------------------
-     // ³]¸m½Ğ¨Dªº¼ĞÀY
-    stun_request[0] = 0x00; // ª©¥»©MÃş«¬
-    stun_request[1] = 0x01; // ¤èªk½X¡]Binding Request¡^
+     // è¨­ç½®è«‹æ±‚çš„æ¨™é ­
+    stun_request[0] = 0x00; // ç‰ˆæœ¬å’Œé¡å‹
+    stun_request[1] = 0x01; // æ–¹æ³•ç¢¼ï¼ˆBinding Requestï¼‰
 
-    // ³]¸m®ø®§ªø«×¡]³o¸Ì¬° 0¡A¦]¬°¨S¦³ÃB¥~ªºÄİ©Ê¡^
+    // è¨­ç½®æ¶ˆæ¯é•·åº¦ï¼ˆé€™è£¡ç‚º 0ï¼Œå› ç‚ºæ²’æœ‰é¡å¤–çš„å±¬æ€§ï¼‰
     stun_request[2] = 0x00;
     stun_request[3] = 0x00;
      
-    // ³]¸mÃÑ§O²Å¡]ÀH¾÷¥Í¦¨¡A³o¸ÌÂ²¤Æ³B²z¡^
-    uint32_t transaction_id = rand(); // ÀH¾÷¥Í¦¨¤@­ÓÃÑ§O²Å
-    memcpy(&stun_request[8], &transaction_id, sizeof(transaction_id)); // ±NÃÑ§O²Å©ñ¤J½Ğ¨D¤¤
+    // è¨­ç½®è­˜åˆ¥ç¬¦ï¼ˆéš¨æ©Ÿç”Ÿæˆï¼Œé€™è£¡ç°¡åŒ–è™•ç†ï¼‰
+    uint32_t transaction_id = rand(); // éš¨æ©Ÿç”Ÿæˆä¸€å€‹è­˜åˆ¥ç¬¦
+    memcpy(&stun_request[8], &transaction_id, sizeof(transaction_id)); // å°‡è­˜åˆ¥ç¬¦æ”¾å…¥è«‹æ±‚ä¸­
 
-    // ³]¸m½Ğ¨Dªø«×
+    // è¨­ç½®è«‹æ±‚é•·åº¦
     request_length = STUN_REQUEST_SIZE; 
 }
 
-//Àò¨ú¤½ºôIP,¨Ãªğ¦^IP OK ¡¹¡¹¡¹¡¹¡¹ 2024-12-29
+//CURLç²å–å…¬ç¶²IP,ä¸¦è¿”å›IP OK â˜…â˜…â˜…â˜…â˜… 2024-12-29
 std::string NatHeartBean::get_public_ip_by_curl() {
-    // ¨Ï¥Î curl ©R¥OÀò¨ú¤½¦@ IP
+    // ä½¿ç”¨ curl å‘½ä»¤ç²å–å…¬å…± IP
     system("curl -s http://ifconfig.me > public_ip_by_curl.txt");
 
-    // Åª¨ú ip.txt ¤å¥ó¤¤ªº¤º®e
+    // è®€å– ip.txt æ–‡ä»¶ä¸­çš„å…§å®¹
     FILE* file = fopen("public_ip_by_curl.txt", "r");
     if (!file) {
         std::cerr << "Failed to open ip.txt" << std::endl;
         return "127.0.0.1";
     }
 
-    char ip[16]; // IPv4 ¦a§}³Ì¤jªø«×
+    char ip[16]; // IPv4 åœ°å€æœ€å¤§é•·åº¦
     if (fgets(ip, sizeof(ip), file) != nullptr) {
         fclose(file);
         return std::string(ip);
     }
 
     fclose(file);
-    return "127.0.0.1"; //Àq»{¥¢±Ñªº­È¦Ó¤£¬O string.empty
+    return "127.0.0.1"; //é»˜èªå¤±æ•—çš„å€¼è€Œä¸æ˜¯ string.empty
 }
 
-// ³q¹L¤º¦sÀò¨ú curl«È¤áºİ©R¥Oµ²ªG ¥²¶·¦w¸Ëcurl(windows ¤º¸mªº,Linux»İ­n¦w¸Ëpackage)
-// curl ©R¥OÀò±o¤½ºôIP OK  ¡¹¡¹¡¹¡¹¡¹ 2024-12-29
+// é€šéå…§å­˜ç²å– curlå®¢æˆ¶ç«¯å‘½ä»¤çµæœ å¿…é ˆå®‰è£curl(windows å…§ç½®çš„,Linuxéœ€è¦å®‰è£package)
+// curl å‘½ä»¤ç²å¾—å…¬ç¶²IP OK  â˜…â˜…â˜…â˜…â˜… 2024-12-29
 std::string NatHeartBean::get_public_ip_by_curl_memory() {
 
-    // ¨Ï¥Î curl ©R¥OÀò¨ú¤½¦@ IP
+    // ä½¿ç”¨ curl å‘½ä»¤ç²å–å…¬å…± IP
     const char* command = "curl -s http://ifconfig.me";
      
-    // ¥´¶}ºŞ¹D¥H°õ¦æ©R¥O
+    // æ‰“é–‹ç®¡é“ä»¥åŸ·è¡Œå‘½ä»¤
 #ifdef WIN32
     int _pclose(FILE * stream);
     std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(command, "r"), _pclose);
@@ -254,7 +277,7 @@ std::string NatHeartBean::get_public_ip_by_curl_memory() {
     char buffer[128];
     std::string result;
 
-    // Åª¨ú©R¥Oªº¿é¥X
+    // è®€å–å‘½ä»¤çš„è¼¸å‡º
     while (fgets(buffer, sizeof(buffer), pipe.get()) != nullptr) {
         result += buffer;
     }

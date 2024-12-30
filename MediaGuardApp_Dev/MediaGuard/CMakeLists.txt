@@ -174,6 +174,7 @@ list(REMOVE_ITEM SOURCES "src/web/*.*")       # web前端
 list(REMOVE_ITEM SOURCES "src/picture/*.*")   # 保存圖片文件夾 
 list(REMOVE_ITEM SOURCES "src/video/*.*")     # 保存mp4文件夾 
 list(REMOVE_ITEM SOURCES "src/conf/*.*")      # 配置文件
+list(REMOVE_ITEM SOURCES "src/*.html")      # 配置文件
 
 # opencv 4.8.1 來自 3rdParty的opencv的情況
 include_directories(${OpenCV_INCLUDE_DIRS}) 

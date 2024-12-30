@@ -1,20 +1,19 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream> 
 #include <cstring> 
-#include <cstdint> // ¥Î©ó uint16_t, uint32_t µ¥Ãş«¬
+#include <cstdint> // ç”¨æ–¼ uint16_t, uint32_t ç­‰é¡å‹
 #include <io.h> 
-#include <cerrno>
- 
+#include <cerrno> 
 #include <stdio.h> 
-#include <cstdio>    // ¥]§t popen ©M pclose ªº©w¸q 
-#include <memory>    // ¥]§t std::unique_ptr
-#include <stdexcept> // ¥]§t std::runtime_error
-#include <string>    // ¥]§t std::string
+#include <cstdio>    // åŒ…å« popen å’Œ pclose çš„å®šç¾© 
+#include <memory>    // åŒ…å« std::unique_ptr
+#include <stdexcept> // åŒ…å« std::runtime_error
+#include <string>    // åŒ…å« std::string
 #include <array>
 
 #ifdef _WIN32
 #include <winsock2.h>  // Windows socket
-#include <ws2tcpip.h>  // Windows TCP/IP
+#include <ws2tcpip.h>  // Windows TCP/IP 
 #pragma comment(lib, "ws2_32.lib") // Windows socket library
 #else
 #include <arpa/inet.h> // POSIX socket
@@ -24,10 +23,11 @@
 #include <netinet/in.h> 
 
 #endif
+  
  
-//https://baike.baidu.com/item/stun/3131387?fr=ge_ala ­ì²z
-//https://www.bilibili.com/opus/727141412236165127
- 
+	// STUN æ¶ˆæ¯ç±»å‹
+#define STUN_BINDING_REQUEST 0x0001
+#define STUN_BINDING_RESPONSE 0x0101
 
 class NatHeartBean {
  
@@ -35,28 +35,33 @@ public:
 	explicit NatHeartBean(); 
 	~NatHeartBean();
 private:
-	const char* STUN_SERVER_IP = "stun.l.google.com"; // STUN ¦øªA¾¹ IP
-	const int STUN_SERVER_PORT = 19302; // STUN ¦øªA¾¹ºİ¤f 
-	// STUN ½Ğ¨Dªº¤j¤p
-	const int STUN_REQUEST_SIZE = 20; // ®Ú¾Ú»İ­n½Õ¾ã¤j¤p 
-public:
-	
-	// ¨Ï¥ÎSTUN ¨óÄ³¥¢±Ñ,«O¯d³o¨â­Ó¨ç¼Æ¥H«áÀu¤Æ©ÎªÌ§ï³y µ²ªG 204.204.204.204
-	// Àò¨ú IP and PORT 
-	void get_server_internet_ip(char*& loacal_ip, int& local_port); 
-	// ¨Ï¥ÎSTUN ¨óÄ³¥¢±Ñ,«O¯d³o¨â­Ó¨ç¼Æ¥H«áÀu¤Æ©ÎªÌ§ï³y µ²ªG 0.0.0.0 
-	void get_local_internet_ip_and_port(char*& loacal_ip, int& local_port);
-	
+	const char* STUN_SERVER = "stun.l.google.com";    //å…è´¹çš„å…¬å…±stunæœåŠ¡å™¨(stun.l.google.com:19302ã€stun2.l.google.com:19302ã€global.stun.twilio.com:3478ç­‰) 
+	const int STUN_SERVER_PORT = 19302; // STUN ä¼ºæœå™¨ç«¯å£ 
+	// STUN è«‹æ±‚çš„å¤§å°
+	const int STUN_REQUEST_SIZE = 20; // æ ¹æ“šéœ€è¦èª¿æ•´å¤§å° 
+
+	//åŒ…è£ bind å‡½æ•¸ é¿å…socketçš„bindå‡½æ•¸åç¨±è¡çª
 	int bind_socket(int sockfd, const struct sockaddr* addr, socklen_t addrlen);
 
-	//³]¸m STUN ½Ğ¨Dªº¤º®e
+	//è¨­ç½® STUN è«‹æ±‚çš„å…§å®¹
 	void create_stun_request();
 
-	// ³q¹Lcurl «È¤áºİ©R¥O Àò¨ú¥~ºôipªº¤è¦¡¬O¥i¥Îªº ok 2024-12-29
-	// «O¯dlog¤å¥óªº¤è¦¡
+public:
+	
+	// ä½¿ç”¨STUN å”è­°å¤±æ•—,ä¿ç•™é€™å…©å€‹å‡½æ•¸ä»¥å¾Œå„ªåŒ–æˆ–è€…æ”¹é€  çµæœ 204.204.204.204
+	// ç²å– IP and PORT 
+	void get_server_internet_ip_port(char*& loacal_ip, int& local_port);
+	 
+	// ä½¿ç”¨STUN å”è­°å¤±æ•—,ä¿ç•™é€™å…©å€‹å‡½æ•¸ä»¥å¾Œå„ªåŒ–æˆ–è€…æ”¹é€  çµæœ 0.0.0.0 
+	void get_local_internet_ip_and_port(char*& loacal_ip, int& local_port);
+	
+	
+
+	// é€šécurl å®¢æˆ¶ç«¯å‘½ä»¤ ç²å–å¤–ç¶²ipçš„æ–¹å¼æ˜¯å¯ç”¨çš„ ok 2024-12-29
+	// ä¿ç•™logæ–‡ä»¶çš„æ–¹å¼
 	std::string get_public_ip_by_curl();
-	// ³q¹Lcurl «È¤áºİ©R¥O Àò¨ú¥~ºôipªº¤è¦¡¬O¥i¥Îªº ok 2024-12-29
-	// ³q¹L¤º¦sÀò¨ú «È¤áºİ©R¥Oµ²ªG
+	// é€šécurl å®¢æˆ¶ç«¯å‘½ä»¤ ç²å–å¤–ç¶²ipçš„æ–¹å¼æ˜¯å¯ç”¨çš„ ok 2024-12-29
+	// é€šéå…§å­˜ç²å– å®¢æˆ¶ç«¯å‘½ä»¤çµæœ
 	std::string get_public_ip_by_curl_memory();
 
 	char stun_request[20];

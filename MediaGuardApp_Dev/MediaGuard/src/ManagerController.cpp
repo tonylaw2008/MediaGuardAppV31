@@ -748,14 +748,19 @@ void ManagerController::main_initialize()
 
 	std::string public_ip = natHeartBean.get_public_ip_by_curl();
 	std::string public_ip2 = natHeartBean.get_public_ip_by_curl_memory();
+	
 	if (!public_ip.empty()) {
-		std::cout << "Public IP Method 1: " << public_ip << "------------------------------save to: ./public_ip_by_curl.txt " << std::endl;
-		std::cout << "Public IP Method 2: " << public_ip2 << std::endl;
+		std::cout << "Public IP Method Curl 1: " << public_ip << "------------------------------save to: ./public_ip_by_curl.txt " << std::endl;
+		std::cout << "Public IP Method Curl 2: " << public_ip2 << std::endl;
+
+		char* public_ip3;
+		int public_port3;
+		natHeartBean.get_server_internet_ip(public_ip3, public_port3);
+		std::cout << "Public IP Method By Stun 3: " << public_ip3 << ":" << public_port3 << std::endl;
 	}
 	else {
 		std::cout << "Failed to retrieve public IP." << std::endl;
 	}
-	 
 	 
 	//系統信息參考 System Information Reference
 	std::cout << "\n===================== SYSTEM INFORMATION REFERENCE =====================\n" << std::endl;

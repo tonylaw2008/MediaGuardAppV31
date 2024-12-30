@@ -15,11 +15,9 @@
 56	12444	7571957046022903	MediaGuard/CMakeFiles/MediaGuard.dir/src/StreamManager.cpp.obj	3e30ec22b99cc034
 126	12311	7571957046726180	MediaGuard/CMakeFiles/MediaGuard.dir/src/include/Config/DeviceConfig.cpp.obj	c4cb27bc0242c506
 49	12910	7571957045953061	MediaGuard/CMakeFiles/MediaGuard.dir/src/RtspStreamHandle.cpp.obj	82bd4f44dfab9ad1
-4579	16378	7571957091251396	MediaGuard/CMakeFiles/MediaGuard.dir/src/main.cpp.obj	c373ee9ca4c731c0
+25	3449	7572462469892381	MediaGuard/CMakeFiles/MediaGuard.dir/src/main.cpp.obj	c373ee9ca4c731c0
 3540	15365	7571957080866163	MediaGuard/CMakeFiles/MediaGuard.dir/src/interface/DeviceInfo.cpp.obj	ad3393b2fe60bfd1
-43	15332	7571957045893224	MediaGuard/CMakeFiles/MediaGuard.dir/src/ManagerController.cpp.obj	c1c89c685ac33cbe
+35	4013	7572463958453591	MediaGuard/CMakeFiles/MediaGuard.dir/src/ManagerController.cpp.obj	c1c89c685ac33cbe
 2571	15652	7571957071175686	MediaGuard/CMakeFiles/MediaGuard.dir/src/interface/CameraMpeg.cpp.obj	3c8280ccedcfbbef
-5898	11424	7571957104439371	MediaGuard/CMakeFiles/MediaGuard.dir/src/stun/NatHeartBean.cpp.obj	75bc0fcfaa992832
-16379	17013	7571957209249964	X:/MediaGuardAppV31/MediaGuardApp_Dev/Output/MediaGuard.exe	1b442f4e8fc4ca57
-35	4497	7571962002083797	MediaGuard/CMakeFiles/MediaGuard.dir/src/ManagerController.cpp.obj	c1c89c685ac33cbe
-4498	4985	7571962046719795	X:/MediaGuardAppV31/MediaGuardApp_Dev/Output/MediaGuard.exe	1b442f4e8fc4ca57
+36	819	7572481439930402	MediaGuard/CMakeFiles/MediaGuard.dir/src/stun/NatHeartBean.cpp.obj	75bc0fcfaa992832
+820	1114	7572481447772514	X:/MediaGuardAppV31/MediaGuardApp_Dev/Output/MediaGuard.exe	1b442f4e8fc4ca57
