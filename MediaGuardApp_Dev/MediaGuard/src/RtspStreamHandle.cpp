@@ -90,9 +90,7 @@ bool RtspStreamHandle::StartDecode(const StreamInfo& infoStream)
 	if (!File::isDirectoryExists(hls_camera_path.string()))
 		File::CreateSingleDirectory(hls_camera_path.string());
 
-	//启动定时清理ts切片，保留最近30秒的 規則改為 只保留index.m3u8包含的文件
-	//m_thHlsClear = std::thread(std::bind(&RtspStreamHandle::clean_hls_ts_run, this));
-	 
+
 	//------------------------------------------------------------------------------------
 	return start_decode();
 }
@@ -394,8 +392,8 @@ bool RtspStreamHandle::open_codec_context(int& nStreamIndex, AVCodecContext** pD
 					fprintf(stderr, "Decoder %s does not support device type %s.\n",
 						pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
 					//打印解码器类型
-					av_log(NULL, AV_LOG_INFO, "Decoder %s does support device type %s.\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
-					std::cout << "\nDecoder " << pDecoder->name << " does support device type" << "av_hwdevice_get_type_name = " << av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType) << "\n" << std::endl;
+					av_log(NULL, AV_LOG_INFO, "\nDecoder %s does support device type %s.\n\n", pDecoder->name, av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType));
+					std::cout << "\nDecoder " << pDecoder->name << "\n\ndoes support device type" << "av_hwdevice_get_type_name = " << av_hwdevice_get_type_name((AVHWDeviceType)m_infoStream.nHDType) << "\n\n" << std::endl;
 					return false;
 				}
 
@@ -525,16 +523,21 @@ bool RtspStreamHandle::open_output_stream(AVFormatContext*& pFormatCtx, bool bRt
 		printf("Invalid output file\n");
 		return false;
 	}
-	std::string strFormatName = bRtmp ? "flv" : "mp4";
+
+	int mediaFormate = (int)MediaFormate::MPEG;
+	//std::string strFormatName = bRtmp ? "flv" : "mp4";  //這裡有問題 輸出格式不是有 bRtmp確定的,這個是輸出rtmp流定義的路徑:如,rtmp://127.0.0.1:1935/live/  //備註:2024-12-31
+	// m_path_filename = strOutputPath;  //m_path_filename 是保存 flv/mp4 文件的路徑 為何拿來保存 輸出流的路徑,不合理 備註:2024-12-31
+
+	std::string strFormatName = m_infoStream.mediaFormate == (int)MediaFormate::MPEG ? "mp4" : "flv";
 	std::string strOutputPath = bRtmp ? m_infoStream.strOutput : get_filename(FType::kFileTypeVideo);
-	m_path_filename = strOutputPath;
+	
 	int nCode = avformat_alloc_output_context2(&pFormatCtx, NULL, strFormatName.c_str(), strOutputPath.c_str());
 	if (nullptr == pFormatCtx)
 	{
 		printf("Can't alloc output context (RtspStreamHandle::open_output_stream::avformat_alloc_output_context2) \n");
 		return false;
 	}
-	 
+	
 	for (auto nIndex = 0; nIndex < m_pInputAVFormatCtx->nb_streams; ++nIndex)
 	{
 		AVStream* pInStream = m_pInputAVFormatCtx->streams[nIndex];
@@ -558,6 +561,7 @@ bool RtspStreamHandle::open_output_stream(AVFormatContext*& pFormatCtx, bool bRt
 		// 标记不需要重新编解码
 		pOutStream->codecpar->codec_tag = 0;
 	}
+
 	av_dump_format(pFormatCtx, 0, strOutputPath.c_str(), 1);
 
 	if (!(pFormatCtx->oformat->flags & AVFMT_NOFILE))
@@ -1116,6 +1120,8 @@ std::string RtspStreamHandle::get_filename(Stream::FType ftype)
 			return hls_path_filename.string();
 
 		case Stream::FType::kFileTypeRtmp: 
+			//例如 rtmp://127.0.0.1:1935/live/ 暫未開發此功能
+			 
 			return "";
 
 		default: 
@@ -1214,17 +1220,22 @@ void RtspStreamHandle::addnew_record_file_info(StreamInfo& streamInfo, int64_t& 
 	{ 
 		std::cout << "RtspStramHandle::get_file_info : no file here:" << m_path_filename << std::endl;
 	}
-
-	cameraMpegInfo.FileFormat = streamInfo.mediaFormate == 0 ? "MP4" : "FLV";
+	 
+	cameraMpegInfo.FileFormat = m_infoStream.mediaFormate == (int)MediaFormate::MPEG ? "mp4" : "flv";
 	cameraMpegInfo.StartTimestamp = startTimestamp; //nMillSecond
 	cameraMpegInfo.EndTimestamp = endTimestamp;  //nLastSaveVideo 
 
-	/*std::stringstream ss;
+	//cameraMpegInfo.MpegFileName = m_path_filename; //這種方式不使用 : 結果是這樣: X:\MediaGuardAppV31\MediaGuardApp_Dev\Output\video\2024-12-30\1735494560076.mp4
+	//改為如下: 例如 video/2023-03-11/1678502654077.flv
+	std::string strToday = Time::GetCurrentDate();
+	if (strToday != m_strToday)
+		m_strToday = strToday;
+	  
+	std::stringstream ss;
 	{
-		ss << startTimestamp << "." << cameraMpegInfo.FileFormat;
-	}*/
-	cameraMpegInfo.MpegFileName = m_path_filename; //ss.str();
-
+		ss <<"/" << kVideoDir <<"/" << strToday << "/" << startTimestamp << "." << cameraMpegInfo.FileFormat;
+	}
+	cameraMpegInfo.MpegFileName = ss.str();
 	//-----------------------------------------------------
 	std::string strResponse;
 	bool bMpegAddResult = false;

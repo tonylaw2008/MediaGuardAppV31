@@ -925,7 +925,7 @@ int CameraMpeg::query_stream_info_record(Service::StreamInfoApiList& streamInfoA
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.strOutput, object, String, strOutput, strRst, CP_INVALID_PARA);
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.bSavePic, object, Bool, bSavePic, strRst, CP_INVALID_PARA);
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.bSaveVideo, object, Bool, bSaveVideo, strRst, CP_INVALID_PARA);
-				//JS_PARSE_REQUIRED_RETURN(streamInfoForApi.bRtmp, object, Bool, bRtmp, strRst, CP_INVALID_PARA);
+				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.bRtmp, object, Bool, bRtmp, strRst, CP_INVALID_PARA);
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.nWidth, object, Int, nWidth, strRst, CP_INVALID_PARA);
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.nHeight, object, Int, nHeight, strRst, CP_INVALID_PARA);
 				JS_PARSE_REQUIRED_RETURN(streamInfoForApi.nPixFmt, object, Int, nPixFmt, strRst, CP_INVALID_PARA);
@@ -997,7 +997,7 @@ void CameraMpeg::get_stream_info(Service::StreamInfoForApi& streamInfoForApi, St
 	infoStream.savePictRate = streamInfoForApi.savePictRate; 					//No.6  
 	infoStream.bSaveVideo = streamInfoForApi.bSaveVideo; 						//No.7  
 	infoStream.nVideoTime = streamInfoForApi.nVideoTime; ;   					//No.8     
-	//infoStream.bRtmp = streamInfoForApi.bRtmp;    							//No.9
+	infoStream.bRtmp = streamInfoForApi.bRtmp;    							//No.9
 	infoStream.strOutput = "rtmp://127.0.0.1:1935/live/"
 		+ std::to_string(streamInfoForApi.nCameraId);							//No.10
 

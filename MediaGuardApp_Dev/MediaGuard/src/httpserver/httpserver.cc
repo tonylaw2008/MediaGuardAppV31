@@ -36,6 +36,24 @@ void httpserver::get_http_local_device_url(std::string& http_local_device_url)
 	http_local_device_url = http_local_device_url_str_stream.str();
 }
 
+/// <summary>
+/// 獲取設備公網IP URL
+/// </summary>
+/// <param name="http_local_device_url"></param>
+void httpserver::get_http_local_dev_internet_url(std::string& http_local_dev_internet_url)
+{
+	const std::string http_scheme_local = "http";
+
+	//這裡還是沿用設備配置的本地端口,所以必須先在路由器設置 NAT 地址轉換 對應 local ip 和 local port 
+	NatHeartBean natHeartBean;
+	std::string internetIp = natHeartBean.get_public_ip_by_curl_memory();
+	std::stringstream http_local_dev_internet_url_stream;
+	{ http_local_dev_internet_url_stream << http_scheme_local << "://" << internetIp << ":" << DEVICE_CONFIG.cfgDevice.device_port << "/"; }
+
+	http_local_dev_internet_url = http_local_dev_internet_url_stream.str();
+}
+
+
 void allowCorsAccess(httplib::Response& res) {
 
 	// 定義允許的來源  
@@ -196,6 +214,10 @@ httplib::Server svr;
    
 	std::string local_device_url;
 	httpserver::get_http_local_device_url(local_device_url);
+
+	std::string http_local_dev_internet_url;
+	httpserver::get_http_local_dev_internet_url(http_local_dev_internet_url);
+
 	std::string local_login = DEVICE_CONFIG.cfgDevice.local_login;
 	std::string local_password = DEVICE_CONFIG.cfgDevice.local_password;
 
@@ -247,17 +269,21 @@ httplib::Server svr;
 			std::string replace_password_phrase = "$password$";
 			std::string replace_local_authorization_phrase = "$local_authorization$"; 
 			std::string replace_camera_hls_phrase = "$camera_hls$";
-			 
 			//格式實例 : http://192.168.0.128:180/hls/8/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289 
 			std::stringstream camera_hls_stringstream;
 			{ camera_hls_stringstream << local_device_url << "hls/8/index.m3u8?token=" << local_authorization; }
+
+			std::string replace_camera_hls_by_stun_phrase = "$camera_hls_by_stun$";
+			//格式實例 : http://42.3.90.118:180/hls/8/index.m3u8?token=7ad166bdb8395514bb54cc0ac21db289 
+			std::stringstream camera_hls_bu_stun_stringstream;
+			{ camera_hls_bu_stun_stringstream << http_local_dev_internet_url << "hls/8/index.m3u8?token=" << local_authorization; }
 			
-			  
 			// 替換所有出現的標記
 			File::replaceAll(file_content, replace_admin_phrase, local_login);
 			File::replaceAll(file_content, replace_password_phrase, local_password);
 			File::replaceAll(file_content, replace_local_authorization_phrase, local_authorization);
 			File::replaceAll(file_content, replace_camera_hls_phrase, camera_hls_stringstream.str());
+			File::replaceAll(file_content, replace_camera_hls_by_stun_phrase, camera_hls_bu_stun_stringstream.str());
 
 			res.set_content(file_content, "text/html");
 		}
@@ -490,7 +516,9 @@ httplib::Server svr;
 			printf("\n[http_server_logger] [log] [StatusCode=404||401||302||206||500] res.status = %d \n\n%s", res.status, log(req, res).c_str());
 		}
 		else {
+#ifdef DEBUG
 			printf("\n[http_server_logger] request_status_code = %d\n", res.status);
+#endif // DEBUG 
 		}
 	});
 	 
@@ -524,7 +552,9 @@ httplib::Server svr;
 		printf("http_server [%spicture] folder does not exist! %s\n\n", local_device_url.c_str(), "./picture");
 	}
 	else {
+#ifdef DEBUG
 		printf("http_server mount [%spicture] success! %s\n\n", local_device_url.c_str(), "./picture");
+#endif
 	}
 	 
 	auto ret4 = svr.set_mount_point("/web", "./web");
@@ -543,8 +573,9 @@ httplib::Server svr;
 			allowCorsAccess(res);
 			// 获取请求路径：/hls/1/index.m3u8
 			std::string path = req.path;
+#ifdef DEBUG
 			printf("\n[funs::set_file_request_handler] file_request path = %s\n\n", path.c_str());
-
+#endif 
 			// html/htm文件是否免用户校验
 			if (path.find("index.html") != -1 || path.find("index.htm") != -1)  //html或htm : 需要用戶驗證 token的情況  
 			{

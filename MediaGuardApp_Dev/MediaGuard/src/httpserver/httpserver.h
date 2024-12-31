@@ -5,6 +5,8 @@
 #include "httplib/httplib.h"
 #include "../File.h"
 
+#include "../stun/NatHeartBean.h"
+
 #include <iostream>
 #include <stdlib.h>
 
@@ -37,7 +39,8 @@ public:
 
 	
 	static int http_server_run(void); 
-	static void get_http_local_device_url(std::string& http_local_device_url);
+	static void get_http_local_device_url(std::string& http_local_device_url); 
+	static void get_http_local_dev_internet_url(std::string& http_local_dev_internet_url);
 	 
 private:
 	

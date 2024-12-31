@@ -751,12 +751,7 @@ void ManagerController::main_initialize()
 	
 	if (!public_ip.empty()) {
 		std::cout << "Public IP Method Curl 1: " << public_ip << "------------------------------save to: ./public_ip_by_curl.txt " << std::endl;
-		std::cout << "Public IP Method Curl 2: " << public_ip2 << std::endl;
-
-		char* public_ip3;
-		int public_port3;
-		natHeartBean.get_server_internet_ip(public_ip3, public_port3);
-		std::cout << "Public IP Method By Stun 3: " << public_ip3 << ":" << public_port3 << std::endl;
+		std::cout << "Public IP Method Curl 2: " << public_ip2 << std::endl; 
 	}
 	else {
 		std::cout << "Failed to retrieve public IP." << std::endl;
@@ -908,10 +903,12 @@ void ManagerController::update_device_nat_internet_ip()
 		 
 		deviceInterNetIpInfo.deviceId = deviceDetails.deviceId; 
 		deviceInterNetIpInfo.internetIp = natHeartBean.get_public_ip_by_curl_memory();
-		std::cout << "MAIN DEVICE PUBLIC INTERNET IP: " << deviceInterNetIpInfo.internetIp << "\n" << std::endl;
+		
 		deviceInterNetIpInfo.localIp = DEVICE_CONFIG.cfgDevice.device_ip;
 		deviceInterNetIpInfo.localPort = to_string(DEVICE_CONFIG.cfgDevice.device_port);
-		std::cout << "MAIN DEVICE LOCAL IP AND PORT: " << deviceInterNetIpInfo.internetIp << ":" << deviceInterNetIpInfo.localPort << "\n" << std::endl;
+		
+		std::cout << "MAIN DEVICE LOCAL SETTING IP AND PORT: " << deviceInterNetIpInfo.localIp << ":" << deviceInterNetIpInfo.localPort << "\n" << std::endl;
+		std::cout << "MAIN DEVICE PUBLIC INTERNET IP AND PORT: " << deviceInterNetIpInfo.internetIp << ":" << deviceInterNetIpInfo.localPort << "\n" << std::endl;
 
 		// 不使用STUN協議的路由端口,
 		// 而是通過路由器設置的 NAT 轉發配置設備的端口要與路由器轉發的端口一致

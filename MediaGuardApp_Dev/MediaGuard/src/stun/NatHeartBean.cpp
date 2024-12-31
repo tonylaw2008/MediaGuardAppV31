@@ -89,7 +89,11 @@ int  NatHeartBean::bind_socket(int sockfd, const struct sockaddr* addr, socklen_
 
 // 獲取 STUN 伺服器的 IP 和端口 2024-12-30
 // 調試可以獲得 stun_server_ip = 118.90.3.42 但不是本公網的IP 應該是stun Server的 可能buffer[] 截取不對應的地方
-
+// char* public_ip3;
+// int public_port3;
+// natHeartBean.get_server_internet_ip_port(public_ip3, public_port3);
+// std::cout << "\nFUNC::NatHeartBean.get_server_internet_ip_port\n" << std::endl;
+// std::cout << "Public IP Method By NAT Stun 3: " << public_ip3 << ":" << public_port3 << std::endl;
 void NatHeartBean::get_server_internet_ip_port(char*& stun_server_ip, int& stun_server_port) {
 
     // 創建 STUN 請求
